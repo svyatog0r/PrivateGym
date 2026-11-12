@@ -267,7 +267,3 @@ PrivateGym.Api/
 - Refresh-токены для сессии дольше 7 дней.
 
 ---
-
-## 📄 Лицензия
-
-MIT — см. [LICENSE](./LICENSE).
