@@ -20,7 +20,7 @@ Full-stack веб-приложение для автоматизации бро�
 
 ## 📐 Архитектура и проектирование
 
-Полный набор диаграмм с пояснениями — в [`/docs/architecture.md`](./docs/architecture.md). Ключевые схемы:
+Полный набор диаграмм с пояснениями — в [`/docs/architecture.md`](/PrivateGym.Api/docs/architecture.md). Ключевые схемы:
 
 ### Use Case — роли и сценарии
 
@@ -123,7 +123,7 @@ stateDiagram-v2
     end note
 ```
 
-Остальные схемы (компоненты, sequence, activity) → [`/docs/architecture.md`](./docs/architecture.md).
+Остальные схемы (компоненты, sequence, activity) → [`/docs/architecture.md`](/PrivateGym.Api/docs/architecture.md).
 
 ---
 
