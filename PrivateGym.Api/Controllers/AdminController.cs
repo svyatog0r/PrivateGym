@@ -80,7 +80,7 @@ namespace PrivateGym.Api.Controllers
                     b.Status,
                     b.TotalPrice,
                     b.PeopleCount,
-                    b.GuestNames
+                    Guests = b.Guests.Select(g => g.User != null ? g.User.FullName : g.GuestName).ToList()
                 })
                 .ToListAsync();
 
@@ -357,8 +357,6 @@ namespace PrivateGym.Api.Controllers
             if (!userExists)
                 return BadRequest(new { Message = "Клиент не найден" });
 
-            // Единый подход с BookingsController: считаем, что dto уже в UTC
-            // (фронт присылает .toISOString()).
             var startTimeOffset = new DateTimeOffset(dto.StartTime, TimeSpan.Zero);
             var endTimeOffset = new DateTimeOffset(dto.EndTime, TimeSpan.Zero);
 
@@ -383,6 +381,32 @@ namespace PrivateGym.Api.Controllers
                     return Conflict(new { Message = "Зал уже занят на это время" });
                 }
 
+                // Превращаем CSV-строки в объекты BookingGuest
+                var newGuests = new List<BookingGuest>();
+
+                // Парсим ID зарегистрированных пользователей
+                if (!string.IsNullOrWhiteSpace(dto.GuestUserIds))
+                {
+                    var userIds = dto.GuestUserIds.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var idStr in userIds)
+                    {
+                        if (int.TryParse(idStr.Trim(), out int guestUserId))
+                        {
+                            newGuests.Add(new BookingGuest { UserId = guestUserId });
+                        }
+                    }
+                }
+
+                // Парсим имена незарегистрированных гостей
+                if (!string.IsNullOrWhiteSpace(dto.GuestNames))
+                {
+                    var names = dto.GuestNames.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var name in names)
+                    {
+                        newGuests.Add(new BookingGuest { GuestName = name.Trim() });
+                    }
+                }
+
                 var booking = new Booking
                 {
                     UserId = dto.UserId,
@@ -392,8 +416,7 @@ namespace PrivateGym.Api.Controllers
                     Status = BookingStatus.Confirmed,
                     TotalPrice = totalPrice,
                     PeopleCount = dto.PeopleCount,
-                    GuestUserIds = dto.GuestUserIds,
-                    GuestNames = dto.GuestNames
+                    Guests = newGuests // Привязываем нормализованных гостей к брони
                 };
 
                 _context.Bookings.Add(booking);
@@ -406,7 +429,7 @@ namespace PrivateGym.Api.Controllers
                 ex is DbUpdateException
                 || (ex is PostgresException pg && pg.SqlState == PostgresErrorCodes.SerializationFailure))
             {
-                await tx.RollbackAsync();
+                try { await tx.RollbackAsync(); } catch { /* транзакция уже закрыта */ }
                 return Conflict(new { Message = "Слот только что заняли. Обновите расписание." });
             }
         }

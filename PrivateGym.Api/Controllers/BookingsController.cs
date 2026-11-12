@@ -145,7 +145,7 @@ namespace PrivateGym.Api.Controllers
             // Ищем брони, где пользователь является создателем (UserId) или добавлен как гость (GuestUserIds)
             var listQuery = _context.Bookings
                 .Where(b => b.Status != BookingStatus.Cancelled &&
-                           (b.UserId == userId || (b.GuestUserIds != null && b.GuestUserIds.Contains(userIdStr))))
+                           (b.UserId == userId || (b.Guests.Any(g => g.UserId == userId))))
                 .Include(b => b.Room)
                 .OrderByDescending(b => b.StartTime)
                 .AsQueryable();
@@ -178,7 +178,7 @@ namespace PrivateGym.Api.Controllers
 
             // Формируем агрегированную статистику за выбранный период
             var statsQuery = _context.Bookings
-                .Where(b => (b.UserId == userId || (b.GuestUserIds != null && b.GuestUserIds.Contains(userIdStr)))
+                .Where(b => (b.UserId == userId || (b.Guests.Any(g => g.UserId == userId)))
                          && b.Status != BookingStatus.Cancelled);
 
             if (!string.IsNullOrEmpty(startDate) && DateTime.TryParse(startDate, out var startStat))
@@ -206,6 +206,102 @@ namespace PrivateGym.Api.Controllers
                 Bookings = bookingsList,
                 TotalStats = totalStats
             });
+        }
+
+        [HttpPost("bulk")]
+        public async Task<IActionResult> CreateBulkBookings([FromBody] BulkCreateBookingDto dto)
+        {
+            if (dto?.Bookings == null || !dto.Bookings.Any())
+                return BadRequest(new { Message = "Список бронирований пуст" });
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Unauthorized(new { Message = "Пользователь не авторизован" });
+
+            // Проверяем базовую валидацию для всех элементов
+            foreach (var b in dto.Bookings)
+            {
+                if (b.StartTime >= b.EndTime || b.StartTime < DateTime.UtcNow)
+                    return BadRequest(new { Message = "Некорректное время в одном из диапазонов" });
+            }
+
+            // Начинаем сериализуемую транзакцию
+            await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+
+            try
+            {
+                var createdBookings = new List<Booking>();
+                var roomNames = new Dictionary<int, string>();
+
+                foreach (var req in dto.Bookings)
+                {
+                    var room = await _context.Rooms.FindAsync(req.RoomId);
+                    if (room == null || !room.IsActive)
+                        return BadRequest(new { Message = $"Зал ID {req.RoomId} не найден или неактивен" });
+
+                    if (req.PeopleCount < 1 || req.PeopleCount > room.Capacity)
+                        return BadRequest(new { Message = $"Превышена вместимость зала {room.Name}" });
+
+                    var startOffset = new DateTimeOffset(req.StartTime, TimeSpan.Zero);
+                    var endOffset = new DateTimeOffset(req.EndTime, TimeSpan.Zero);
+
+                    // 1. Проверка пересечений с БД
+                    var overlap = await _context.Bookings.AnyAsync(b =>
+                        b.RoomId == req.RoomId && b.Status != BookingStatus.Cancelled &&
+                        b.StartTime < endOffset && b.EndTime > startOffset);
+
+                    if (overlap)
+                        return Conflict(new { Message = $"Зал {room.Name} уже занят на выбранное время" });
+
+                    // 2. Проверка пересечений внутри текущего запроса (между диапазонами)
+                    foreach (var existing in createdBookings.Where(x => x.RoomId == req.RoomId))
+                    {
+                        if (startOffset < existing.EndTime && endOffset > existing.StartTime)
+                            return Conflict(new { Message = "Выбранные диапазоны времени пересекаются между собой" });
+                    }
+
+                    var hours = (req.EndTime - req.StartTime).TotalHours;
+                    var price = (room.BasePrice + room.PricePerAdditionalPerson * (req.PeopleCount - 1)) * (decimal)hours;
+
+                    var booking = new Booking
+                    {
+                        UserId = userId,
+                        RoomId = req.RoomId,
+                        StartTime = startOffset,
+                        EndTime = endOffset,
+                        Status = BookingStatus.Confirmed,
+                        TotalPrice = price,
+                        PeopleCount = req.PeopleCount
+                    };
+                    createdBookings.Add(booking);
+                    roomNames[req.RoomId] = room.Name;
+                }
+
+                _context.Bookings.AddRange(createdBookings);
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                var response = createdBookings.Select(b => new BookingResponseDto
+                {
+                    Id = b.Id,
+                    RoomId = b.RoomId,
+                    RoomName = roomNames[b.RoomId],
+                    StartTime = b.StartTime.DateTime,
+                    EndTime = b.EndTime.DateTime,
+                    Status = b.Status.ToString(),
+                    TotalPrice = b.TotalPrice,
+                    PeopleCount = b.PeopleCount
+                });
+
+                return Ok(response);
+            }
+            catch (Exception ex) when (
+                ex is DbUpdateException
+                || (ex is PostgresException pg && pg.SqlState == PostgresErrorCodes.SerializationFailure))
+            {
+                try { await tx.RollbackAsync(); } catch { }
+                return Conflict(new { Message = "Некоторые слоты только что заняли. Обновите расписание." });
+            }
         }
 
         /// Отменяет бронирование (меняет статус на Cancelled).

@@ -977,12 +977,12 @@
                     }
                 }
 
-window.submitBooking = async function () {
+async function submitBooking() {
     if (window.selectedHours.length === 0) return;
 
+    // Группируем непрерывные слоты в диапазоны
     var ranges = [];
     var currentRange = [window.selectedHours[0]];
-
     for (var i = 1; i < window.selectedHours.length; i++) {
         if (window.selectedHours[i] === window.selectedHours[i - 1] + 1) {
             currentRange.push(window.selectedHours[i]);
@@ -995,63 +995,45 @@ window.submitBooking = async function () {
 
     var dateStr = document.getElementById('booking-date').value;
     var parts = dateStr.split('-');
-    var year = parseInt(parts[0]);
-    var month = parseInt(parts[1]) - 1;
-    var day = parseInt(parts[2]);
+    var year = parseInt(parts[0]), month = parseInt(parts[1]) - 1, day = parseInt(parts[2]);
+
+    var bookingsPayload = ranges.map(function (range) {
+        var startHour = range[0];
+        var endHour = range[range.length - 1] + 1;
+        return {
+            roomId: window.currentRoomId,
+            startTime: new Date(year, month, day, startHour, 0, 0).toISOString(),
+            endTime: new Date(year, month, day, endHour, 0, 0).toISOString(),
+            peopleCount: window.peopleCount
+        };
+    });
 
     var btn = document.getElementById('submit-booking-btn');
     var originalText = btn.innerText;
     btn.disabled = true;
     btn.innerText = 'Обработка...';
 
-    var successCount = 0;
-    var errorMessage = '';
+    try {
+        var response = await window.apiRequest('/bookings/bulk', {
+            method: 'POST',
+            body: { bookings: bookingsPayload }
+        });
 
-    for (var i = 0; i < ranges.length; i++) {
-        var range = ranges[i];
-        var startHour = range[0];
-        var endHour = range[range.length - 1] + 1;
-
-        var startDate = new Date(year, month, day, startHour, 0, 0);
-        var endDate = new Date(year, month, day, endHour, 0, 0);
-
-        try {
-            var response = await window.apiRequest('/bookings', {
-                method: 'POST',
-                body: {
-                    roomId: window.currentRoomId,
-                    startTime: startDate.toISOString(),
-                    endTime: endDate.toISOString(),
-                    peopleCount: window.peopleCount
-                }
-            });
-
-            if (response.ok) {
-                successCount++;
-            } else {
-                var err = await response.json();
-                errorMessage = err.message || err.title || 'Ошибка бронирования';
-                break;
-            }
-        } catch (error) {
-            errorMessage = error.message;
-            break;
+        if (response.ok) {
+            alert('Успешно забронировано!');
+            window.closeModal();
+            // опционально: перезагрузить расписание или обновить список
+        } else {
+            var err = await response.json();
+            alert((err.message || 'Ошибка бронирования'));
         }
-    }
-
-    if (successCount > 0 && !errorMessage) {
-        alert('✅ Успешно забронировано! (Создано записей: ' + successCount + ')');
-        window.closeModal();
-    } else if (successCount > 0 && errorMessage) {
-        alert('⚠️ Частичный успех: создано ' + successCount + ' записей, но далее ошибка: ' + errorMessage);
-        btn.disabled = false;
-        btn.innerText = originalText;
-    } else {
-        alert('❌ ' + (errorMessage || 'Ошибка бронирования'));
+    } catch (error) {
+        alert(error.message);
+    } finally {
         btn.disabled = false;
         btn.innerText = originalText;
     }
-};
+}
 
                 window.onclick = function(event) {
                     if (event.target === document.getElementById('booking-modal')) {

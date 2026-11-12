@@ -14,6 +14,6 @@ public class Booking
     public BookingStatus Status { get; set; } = BookingStatus.Pending;
     public decimal TotalPrice { get; set; }
     public int PeopleCount { get; set; } = 1;
-    public string? GuestUserIds { get; set; }
-    public string? GuestNames { get; set; }
+    // Вместо строк теперь коллекция объектов
+    public List<BookingGuest> Guests { get; set; } = new();
 }

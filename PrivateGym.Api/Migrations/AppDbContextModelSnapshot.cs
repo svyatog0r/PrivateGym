@@ -34,12 +34,6 @@ namespace PrivateGym.Api.Migrations
                     b.Property<DateTimeOffset>("EndTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("GuestNames")
-                        .HasColumnType("text");
-
-                    b.Property<string>("GuestUserIds")
-                        .HasColumnType("text");
-
                     b.Property<int>("PeopleCount")
                         .HasColumnType("integer");
 
@@ -65,6 +59,32 @@ namespace PrivateGym.Api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Bookings");
+                });
+
+            modelBuilder.Entity("PrivateGym.Api.Models.BookingGuest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BookingId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GuestName")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BookingGuests");
                 });
 
             modelBuilder.Entity("PrivateGym.Api.Models.Room", b =>
@@ -165,6 +185,29 @@ namespace PrivateGym.Api.Migrations
                     b.Navigation("Room");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PrivateGym.Api.Models.BookingGuest", b =>
+                {
+                    b.HasOne("PrivateGym.Api.Models.Booking", "Booking")
+                        .WithMany("Guests")
+                        .HasForeignKey("BookingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PrivateGym.Api.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Booking");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PrivateGym.Api.Models.Booking", b =>
+                {
+                    b.Navigation("Guests");
                 });
 
             modelBuilder.Entity("PrivateGym.Api.Models.Room", b =>
