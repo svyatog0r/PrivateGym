@@ -1,0 +1,1945 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PrivateGym — Интерактивная демонстрация</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --bg-dark: #1e293b;
+            --bg-light: #f8fafc;
+            --text-dark: #0f172a;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .demo-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            text-align: center;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+            .demo-banner span {
+                background: rgba(255,255,255,0.2);
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 0.85em;
+                margin-right: 12px;
+            }
+
+        *:focus {
+            outline: none !important;
+        }
+
+        *:focus-visible {
+            outline: 2px solid var(--primary) !important;
+            outline-offset: 2px;
+        }
+
+        .doc-nav {
+            position: fixed;
+            left: 0;
+            top: 48px;
+            width: 280px;
+            height: calc(100vh - 48px);
+            background: var(--bg-dark);
+            color: white;
+            padding: 30px 20px;
+            overflow-y: auto;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .doc-nav h2 {
+                font-size: 1.3em;
+                margin-bottom: 30px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+
+            .doc-nav ul {
+                list-style: none;
+                flex: 1;
+            }
+
+            .doc-nav li {
+                margin-bottom: 12px;
+            }
+
+            .doc-nav a {
+                color: #cbd5e1;
+                text-decoration: none;
+                font-size: 0.95em;
+                transition: all 0.3s;
+                display: block;
+                padding: 10px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+            }
+
+                .doc-nav a:hover {
+                    color: white;
+                    background: rgba(255,255,255,0.05);
+                }
+
+                .doc-nav a.active {
+                    color: white;
+                    background: var(--primary);
+                }
+
+        .doc-nav-actions {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .doc-nav-btn {
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+            .doc-nav-btn.outline {
+                background: rgba(255,255,255,0.1);
+                color: white;
+            }
+
+                .doc-nav-btn.outline:hover {
+                    background: rgba(255,255,255,0.2);
+                }
+
+            .doc-nav-btn.primary {
+                background: var(--primary);
+                color: white;
+            }
+
+                .doc-nav-btn.primary:hover {
+                    background: var(--primary-dark);
+                }
+
+        .doc-content {
+            margin-left: 280px;
+            margin-top: 48px;
+            padding: 40px;
+            max-width: 1400px;
+        }
+
+        .doc-header {
+            margin-bottom: 40px;
+        }
+
+            .doc-header h1 {
+                font-size: 2.5em;
+                margin-bottom: 16px;
+                color: var(--text-dark);
+            }
+
+            .doc-header p {
+                font-size: 1.1em;
+                color: var(--text-light);
+                max-width: 700px;
+            }
+
+        .content-tab {
+            display: none;
+            animation: fadeInTab 0.4s ease;
+        }
+
+            .content-tab.active {
+                display: block;
+            }
+
+        @keyframes fadeInTab {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .demo-mode-switch {
+            display: inline-flex;
+            background: #e2e8f0;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mode-btn {
+            padding: 10px 24px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #64748b;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .mode-btn.active {
+                background: white;
+                color: var(--primary);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+
+        .reset-btn {
+            padding: 8px 16px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            color: #475569;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .reset-btn:hover {
+                background: #f1f5f9;
+                border-color: #94a3b8;
+            }
+
+        .demo-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+        }
+
+        .demo-browser-bar {
+            background: #f1f5f9;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+            .demo-dot.red {
+                background: #ef4444;
+            }
+
+            .demo-dot.yellow {
+                background: #eab308;
+            }
+
+            .demo-dot.green {
+                background: #22c55e;
+            }
+
+        .demo-url {
+            flex: 1;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            color: var(--text-light);
+            margin-left: 12px;
+        }
+
+        .demo-body {
+            padding: 0;
+            min-height: 600px;
+            position: relative;
+        }
+
+        .demo-app-layout {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .demo-sidebar {
+            width: 240px;
+            background: var(--bg-dark);
+            color: white;
+            padding: 24px 16px;
+            flex-shrink: 0;
+        }
+
+        .demo-sidebar-logo {
+            font-size: 1.3em;
+            font-weight: 700;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .demo-sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .demo-sidebar-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .demo-sidebar-item:hover {
+                background: rgba(255,255,255,0.05);
+                color: white;
+            }
+
+            .demo-sidebar-item.active {
+                background: var(--primary);
+                color: white;
+            }
+
+        .demo-main {
+            flex: 1;
+            padding: 32px;
+            background: #f8fafc;
+            overflow-y: auto;
+            max-height: 800px;
+        }
+
+        .demo-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+            .demo-topbar h1 {
+                font-size: 1.8em;
+                font-weight: 700;
+            }
+
+        .demo-user-badge {
+            background: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+            .stat-icon.blue {
+                background: #eff6ff;
+            }
+
+            .stat-icon.green {
+                background: #f0fdf4;
+            }
+
+            .stat-icon.purple {
+                background: #faf5ff;
+            }
+
+            .stat-icon.orange {
+                background: #fff7ed;
+            }
+
+        .stat-info h3 {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .stat-info p {
+            font-size: 0.875em;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+            .room-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+                border-color: #667eea;
+            }
+
+        .room-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .room-card-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .room-card-desc {
+            font-size: 0.9em;
+            color: #64748b;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .room-card-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85em;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .room-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+            .room-card-actions .btn {
+                flex: 1;
+            }
+
+        .filters-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: end;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+            .filters-bar .form-group {
+                margin: 0;
+                flex: 1;
+                min-width: 150px;
+            }
+
+        .booking-row {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: all 0.2s;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+            .booking-row:hover {
+                border-color: #667eea;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+
+        .booking-row-header {
+            display: grid;
+            grid-template-columns: 1.2fr 1.5fr 1fr 1fr 0.5fr;
+            align-items: center;
+            padding: 12px 16px;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+            .booking-row-header:hover {
+                background: #f8fafc;
+            }
+
+        .br-date {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 0.9em;
+        }
+
+            .br-date span {
+                display: block;
+                font-size: 0.85em;
+                color: #64748b;
+                font-weight: 400;
+            }
+
+        .br-client {
+            color: #334155;
+            font-size: 0.9em;
+        }
+
+        .br-room {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .br-price {
+            font-weight: 700;
+            color: #0f172a;
+            text-align: right;
+            font-size: 0.9em;
+        }
+
+        .br-chevron {
+            color: #94a3b8;
+            transition: transform 0.2s;
+            text-align: center;
+            font-size: 0.8em;
+        }
+
+        .booking-row.expanded .br-chevron {
+            transform: rotate(180deg);
+        }
+
+        .booking-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #f8fafc;
+            border-top: 1px solid transparent;
+        }
+
+        .booking-row.expanded .booking-details {
+            max-height: 300px;
+            border-top-color: #e2e8f0;
+        }
+
+        .booking-details-content {
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 0.8em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 0.95em;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .booking-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 8px;
+            padding-top: 16px;
+            border-top: 1px dashed #cbd5e1;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-Confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-Cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-Completed {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background: #5568d3;
+            }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+        }
+
+            .btn-secondary:hover {
+                background: #e2e8f0;
+            }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+            .btn-danger:hover {
+                background: #fecaca;
+            }
+
+        .btn-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+            .btn-warning:hover {
+                background: #fde68a;
+            }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 6px;
+                font-weight: 600;
+                color: #334155;
+                font-size: 0.9em;
+            }
+
+            .form-group input, .form-group textarea, .form-group select {
+                width: 100%;
+                padding: 10px 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                font-size: 0.95em;
+                background: white;
+            }
+
+                .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .booking-modal-layout {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 32px;
+            align-items: start;
+        }
+
+        .booking-left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .booking-section {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .booking-section-title {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .date-input-wrapper {
+            position: relative;
+        }
+
+            .date-input-wrapper input {
+                width: 100%;
+                padding: 10px 40px 10px 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                font-size: 0.95em;
+            }
+
+            .date-input-wrapper::after {
+                content: '📅';
+                position: absolute;
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                pointer-events: none;
+            }
+
+        .people-counter {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .counter-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #475569;
+            transition: all 0.2s;
+        }
+
+            .counter-btn:hover {
+                background: #f1f5f9;
+                border-color: #94a3b8;
+            }
+
+        .counter-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .time-slots-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .time-slot-btn {
+            padding: 10px;
+            border: 1px solid #bbf7d0;
+            background: #f0fdf4;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #166534;
+            transition: all 0.2s;
+        }
+
+            .time-slot-btn:hover {
+                background: #dcfce7;
+                border-color: #86efac;
+            }
+
+            .time-slot-btn.selected {
+                background: #16a34a;
+                color: white;
+                border-color: #15803d;
+            }
+
+            .time-slot-btn.disabled {
+                background: #f1f5f9;
+                color: #cbd5e1;
+                border-color: #e2e8f0;
+                cursor: not-allowed;
+            }
+
+        .booking-right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .room-info-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .room-info-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .room-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+
+            .room-info-row:last-child {
+                border-bottom: none;
+            }
+
+        .room-info-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .room-info-value {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .booking-summary {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+        }
+
+        .summary-label {
+            color: #64748b;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 2px solid #e2e8f0;
+            margin-top: 12px;
+        }
+
+            .summary-total .summary-label {
+                font-size: 1.1em;
+                font-weight: 600;
+                color: #0f172a;
+            }
+
+            .summary-total .summary-value {
+                font-size: 1.5em;
+                font-weight: 700;
+                color: var(--primary);
+            }
+
+        .booking-submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: #cbd5e1;
+            color: #64748b;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: not-allowed;
+            transition: all 0.2s;
+        }
+
+            .booking-submit-btn.active {
+                background: var(--primary);
+                color: white;
+                cursor: pointer;
+            }
+
+                .booking-submit-btn.active:hover {
+                    background: var(--primary-dark);
+                }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .modal.active {
+                display: flex;
+            }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+            .modal-header h2 {
+                margin: 0;
+                font-size: 1.4em;
+            }
+
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .close-btn:hover {
+                background: #e2e8f0;
+            }
+
+        #toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: white;
+            border-left: 4px solid var(--success);
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .explanation-box {
+            background: #f8fafc;
+            border-left: 4px solid var(--primary);
+            padding: 24px;
+            border-radius: 8px;
+            margin-top: 24px;
+        }
+
+            .explanation-box h4 {
+                font-size: 1.1em;
+                margin-bottom: 12px;
+                color: var(--text-dark);
+            }
+
+            .explanation-box ul {
+                margin-left: 20px;
+                color: var(--text-light);
+            }
+
+            .explanation-box li {
+                margin-bottom: 8px;
+            }
+
+        @media (max-width: 1024px) {
+            .doc-nav {
+                display: none;
+            }
+
+            .doc-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .demo-app-layout {
+                flex-direction: column;
+            }
+
+            .demo-sidebar {
+                width: 100%;
+            }
+
+            .booking-modal-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .time-slots-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-banner">
+        <span>🎮 ДЕМО-РЕЖИМ</span>
+        Это интерактивная демонстрация. Все данные имитированы. Для реального использования перейдите в основное приложение.
+    </div>
+
+    <nav class="doc-nav">
+        <h2>📚 Навигация</h2>
+        <ul>
+            <li><a href="#" class="active" onclick="showTopLevelTab('about-section', this); return false;">📖 О системе</a></li>
+            <li><a href="#" onclick="showTopLevelTab('demo-section', this); return false;">🎮 Интерактивное демо</a></li>
+        </ul>
+        <div class="doc-nav-actions">
+            <a href="/login.html" class="doc-nav-btn outline">🔑 Войти в реальную систему</a>
+            <a href="/register.html" class="doc-nav-btn primary">🚀 Регистрация</a>
+        </div>
+    </nav>
+
+    <div class="doc-content">
+
+
+        <!-- Вкладка: О системе -->
+        <section id="about-section" class="content-tab active">
+            <div class="doc-header">
+                <h2 style="font-size: 2.2em; margin-bottom: 16px; color: var(--text-dark);">PrivateGym: Аренда индивидуальных залов</h2>
+                <p style="font-size: 1.1em; color: var(--text-light); max-width: 900px; line-height: 1.7;">
+                    Традиционные фитнес-клубы часто ассоциируются с очередями к тренажерам, шумом и нехваткой личного пространства. <strong>PrivateGym</strong> — это платформа для бронирования изолированных тренировочных помещений. Сервис позволяет клиентам арендовать залы наедине с собой или в кругу близких, обеспечивая максимальный комфорт и конфиденциальность.
+                </p>
+            </div>
+
+            <!-- Блок: Для кого и зачем (Бизнес-ценность) -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px;">
+                <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid var(--border);">
+                    <div style="font-size: 2em; margin-bottom: 16px;">👤</div>
+                    <h3 style="font-size: 1.3em; margin-bottom: 12px; color: var(--text-dark);">Для клиентов</h3>
+                    <ul style="margin-left: 20px; color: var(--text-light); line-height: 1.8;">
+                        <li>Прозрачное расписание: видно только реально свободные слоты.</li>
+                        <li>Онлайн-оплата и моментальное подтверждение брони.</li>
+                        <li>Возможность бронировать зал как на себя, так и на гостей.</li>
+                        <li>Управление своими записями в личном кабинете (отмена, просмотр истории).</li>
+                    </ul>
+                </div>
+                <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid var(--border);">
+                    <div style="font-size: 2em; margin-bottom: 16px;">🛡️</div>
+                    <h3 style="font-size: 1.3em; margin-bottom: 12px; color: var(--text-dark);">Для администрации</h3>
+                    <ul style="margin-left: 20px; color: var(--text-light); line-height: 1.8;">
+                        <li>Гибкая система ценообразования (базовая ставка + доплата за гостей).</li>
+                        <li>Инструменты создания и редактирования залов и их оборудования.</li>
+                        <li>Единый центр управления всеми бронированиями (включая создание записей за клиентов).</li>
+                        <li>Аналитический дашборд с графиками выручки и загрузки.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Блок: Архитектура (Сухо и по делу) -->
+            <div style="background: #1e293b; border-radius: 12px; padding: 32px; color: #cbd5e1;">
+                <h3 style="color: white; margin-bottom: 24px; font-size: 1.3em; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.2em;">⚙️</span> Техническая реализация
+                </h3>
+                <p style="margin-bottom: 24px; font-size: 0.95em; line-height: 1.6; color: #94a3b8;">
+                    Проект спроектирован как надежный Full-stack сервис с упором на сохранность данных и отказоустойчивость.
+                    Архитектура построена по классической клиент-серверной модели.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #667eea;">
+                        <h4 style="color: white; margin-bottom: 8px;">Backend (.NET)</h4>
+                        <p style="font-size: 0.85em; line-height: 1.5;">ASP.NET Core Web API. Использование изоляции транзакций (Serializable) для защиты от двойных броней. Фоновые службы (BackgroundService) для автоматического обновления статусов.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #22c55e;">
+                        <h4 style="color: white; margin-bottom: 8px;">База данных</h4>
+                        <p style="font-size: 0.85em; line-height: 1.5;">PostgreSQL + Entity Framework Core. Хранение массивов (оборудование) в нативных типах. Автоматическое применение миграций при старте приложения.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #f59e0b;">
+                        <h4 style="color: white; margin-bottom: 8px;">Безопасность</h4>
+                        <p style="font-size: 0.85em; line-height: 1.5;">Ролевая модель доступа (JWT), хеширование паролей (BCrypt). Строгая валидация всех входящих данных, расчет стоимости только на стороне сервера.</p>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #ef4444;">
+                        <h4 style="color: white; margin-bottom: 8px;">Инфраструктура</h4>
+                        <p style="font-size: 0.85em; line-height: 1.5;">Полностью контейнеризировано. Docker Compose позволяет развернуть весь стек (API + БД) одной командой за пару минут.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="demo-section" class="content-tab">
+            <h2 style="margin-bottom: 24px; font-size: 2em;">🎮 Интерактивное демо</h2>
+
+            <div class="demo-mode-switch">
+                <button class="mode-btn active" id="btn-client-mode" onclick="setDemoMode('client')">👤 Вид клиента</button>
+                <button class="mode-btn" id="btn-admin-mode" onclick="setDemoMode('admin')">🛡️ Вид администратора</button>
+                <button class="reset-btn" onclick="resetDemoData()" title="Восстановить исходные данные">🔄 Сбросить демо</button>
+            </div>
+
+            <div class="demo-container">
+                <div class="demo-browser-bar">
+                    <div class="demo-dot red"></div><div class="demo-dot yellow"></div><div class="demo-dot green"></div>
+                    <div class="demo-url" id="demo-url-text">https://privategym.com/client</div>
+                </div>
+                <div class="demo-body">
+                    <div class="demo-app-layout">
+                        <div class="demo-sidebar" id="client-sidebar">
+                            <div class="demo-sidebar-logo">🏋️ PrivateGym</div>
+                            <div class="demo-sidebar-nav">
+                                <div class="demo-sidebar-item active" onclick="switchDemoTab('client-rooms')">🏋️ Залы</div>
+                                <div class="demo-sidebar-item" onclick="switchDemoTab('client-bookings')">📅 Мои бронирования</div>
+                                <div class="demo-sidebar-item" onclick="switchDemoTab('client-profile')">👤 Мой профиль</div>
+                            </div>
+                        </div>
+                        <div class="demo-sidebar" id="admin-sidebar" style="display: none;">
+                            <div class="demo-sidebar-logo">🛡️ PrivateGym Admin</div>
+                            <div class="demo-sidebar-nav">
+                                <div class="demo-sidebar-item active" onclick="switchDemoTab('admin-overview')">📊 Обзор</div>
+                                <div class="demo-sidebar-item" onclick="switchDemoTab('admin-rooms')">️ Залы</div>
+                                <div class="demo-sidebar-item" onclick="switchDemoTab('admin-bookings')">📅 Бронирования</div>
+                            </div>
+                        </div>
+                        <div class="demo-main" id="demo-main-content"></div>
+                    </div>
+
+                    <!-- Модальное окно бронирования -->
+                    <div id="booking-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>Бронирование</h2>
+                                <button class="close-btn" onclick="closeModal('booking-modal')">×</button>
+                            </div>
+                            <div class="booking-modal-layout">
+                                <div class="booking-left-panel">
+                                    <div class="booking-section">
+                                        <div class="booking-section-title">📅 Выберите дату:</div>
+                                        <div class="date-input-wrapper">
+                                            <input type="date" id="booking-date-input" onchange="updateBookingDate()">
+                                        </div>
+                                    </div>
+
+                                    <div class="booking-section">
+                                        <div class="booking-section-title">👥 Количество человек:</div>
+                                        <div class="people-counter">
+                                            <button class="counter-btn" onclick="changePeopleCount(-1)">−</button>
+                                            <span class="counter-value" id="people-count">1</span>
+                                            <button class="counter-btn" onclick="changePeopleCount(1)">+</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="booking-section">
+                                        <div class="booking-section-title">⏰ Доступное время (выберите непрерывный диапазон):</div>
+                                        <div class="time-slots-grid" id="time-slots">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="booking-right-panel">
+                                    <div class="room-info-card">
+                                        <div class="room-info-title" id="booking-room-name">Арена</div>
+                                        <div class="room-info-row">
+                                            <span class="room-info-label">👥 Макс. вместимость:</span>
+                                            <span class="room-info-value" id="booking-room-capacity">до 8 чел.</span>
+                                        </div>
+                                        <div class="room-info-row">
+                                            <span class="room-info-label">🔥 Базовая цена:</span>
+                                            <span class="room-info-value" id="booking-room-price">1200 ₽/ч (база)</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="booking-summary">
+                                        <div class="summary-row">
+                                            <span class="summary-label"> Дата:</span>
+                                            <span class="summary-value" id="summary-date">13 октября 2026 г.</span>
+                                        </div>
+                                        <div class="summary-row">
+                                            <span class="summary-label"> Время:</span>
+                                            <span class="summary-value" id="summary-time">Не выбрано</span>
+                                        </div>
+                                        <div class="summary-row">
+                                            <span class="summary-label">⏱️ Длительность:</span>
+                                            <span class="summary-value" id="summary-duration">0 ч.</span>
+                                        </div>
+                                        <div class="summary-total">
+                                            <span class="summary-label">Итого к оплате:</span>
+                                            <span class="summary-value" id="summary-total">0 ₽</span>
+                                        </div>
+                                    </div>
+
+                                    <button class="booking-submit-btn" id="booking-submit-btn" onclick="confirmBooking()">
+                                        Выберите время для бронирования
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Модальное окно редактирования зала (Админ) -->
+                    <div id="edit-room-modal" class="modal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h2>✏️ Редактировать зал</h2>
+                                <button class="close-btn" onclick="closeModal('edit-room-modal')">×</button>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group full-width"><label>Название зала *</label><input type="text" id="edit-room-name"></div>
+                                <div class="form-group full-width"><label>Описание *</label><textarea id="edit-room-desc" rows="2"></textarea></div>
+                                <div class="form-group"><label>Категория</label><input type="text" id="edit-room-category"></div>
+                                <div class="form-group"><label>URL картинки</label><input type="text" id="edit-room-image"></div>
+                                <div class="form-group"><label>Вместимость (чел.)</label><input type="number" id="edit-room-capacity"></div>
+                                <div class="form-group"><label>Базовая цена (₽/ч)</label><input type="number" id="edit-room-base-price"></div>
+                                <div class="form-group"><label>Доплата за чел. (₽/ч)</label><input type="number" id="edit-room-add-price"></div>
+                                <div class="form-group"><label>Активен</label><select id="edit-room-active"><option value="true">Да</option><option value="false">Нет</option></select></div>
+                                <div class="form-group full-width"><label>Оборудование (через запятую)</label><input type="text" id="edit-room-equipment"></div>
+                                <div class="form-group full-width"><label>Группы мышц (через запятую)</label><input type="text" id="edit-room-muscles"></div>
+                                <div class="form-group full-width"><button class="btn btn-primary" style="width: 100%;" onclick="saveRoomEdit()">Сохранить изменения</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation-box" style="margin-top: 24px;">
+                <h4>📋 Как пользоваться демо:</h4>
+                <ul>
+                    <li>Используйте <strong>переключатель сверху</strong>, чтобы увидеть разницу между интерфейсом клиента и администратора.</li>
+                    <li>В режиме админа вкладки <strong>"Обзор", "Залы", "Бронирования"</strong> работают точь-в-точь как в реальной админ-панели.</li>
+                    <li>Попробуйте нажать <strong>"Забронировать"</strong> — откроется полноценное модальное окно с выбором времени.</li>
+                    <li>Кнопка <strong>"🔄 Сбросить демо"</strong> восстановит все исходные данные, если вы что-то удалили.</li>
+                </ul>
+            </div>
+        </section>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+                // данные ===
+                const originalData = {
+                    rooms: [
+                        { id: 1, name: 'Арена', category: 'Функциональный', description: 'Просторный зал для кроссфита.', capacity: 8, basePrice: 1200, addPrice: 250, active: true, image: '', equipment: 'Рама, Гири', muscles: 'Кардио, Всё тело' },
+                        { id: 2, name: 'Дзен', category: 'Mind & Body', description: 'Спокойное пространство для йоги.', capacity: 6, basePrice: 700, addPrice: 150, active: true, image: '', equipment: 'Коврики, Болы', muscles: 'Растяжка, Кор' },
+                        { id: 3, name: 'Механика', category: 'Силовые', description: 'Зал блочных тренажёров.', capacity: 5, basePrice: 800, addPrice: 200, active: true, image: '', equipment: 'Кроссовер, Жим', muscles: 'Грудь, Спина' },
+                        { id: 4, name: 'Пульс', category: 'Кардио', description: 'Кардио-зона для выносливости.', capacity: 4, basePrice: 600, addPrice: 150, active: true, image: '', equipment: 'Дорожки, Эллипсы', muscles: 'Кардио, ноги' }
+                    ],
+                    adminBookings: [
+                        { id: 101, roomName: 'Арена', clientName: 'Иван Петров', clientEmail: 'ivan@mail.ru', date: '2026-10-15', startTime: '14:00', endTime: '16:00', price: 2400, status: 'Confirmed', people: 2, guests: 'Нет' },
+                        { id: 102, roomName: 'Дзен', clientName: 'Анна Сидорова', clientEmail: 'anna@mail.ru', date: '2026-10-18', startTime: '10:00', endTime: '11:30', price: 1050, status: 'Confirmed', people: 1, guests: 'Нет' },
+                        { id: 103, roomName: 'Механика', clientName: 'Олег Козлов', clientEmail: 'oleg@mail.ru', date: '2026-10-10', startTime: '18:00', endTime: '19:30', price: 1200, status: 'Completed', people: 1, guests: 'Дмитрий' },
+                        { id: 104, roomName: 'Пульс', clientName: 'Мария Иванова', clientEmail: 'maria@mail.ru', date: '2026-10-20', startTime: '09:00', endTime: '10:00', price: 600, status: 'Cancelled', people: 1, guests: 'Нет' }
+                    ],
+                    clientBookings: [
+                        { id: 1, roomName: 'Арена', date: '2026-10-15', startTime: '14:00', endTime: '16:00', price: 2400, status: 'Confirmed' },
+                        { id: 2, roomName: 'Дзен', date: '2026-10-18', startTime: '10:00', endTime: '11:30', price: 1050, status: 'Confirmed' }
+                    ],
+                    profile: { name: 'Иван Петров', role: 'Клиент', totalBookings: 12, activeBookings: 2, completedBookings: 10, totalSpent: 8400 },
+                    adminStats: { totalBookings: 145, totalRevenue: 185000, activeBookings: 8, totalRooms: 4 }
+                };
+
+                // Рабочие данные (клон оригинала)
+                let demoData = JSON.parse(JSON.stringify(originalData));
+                let demoMode = 'client';
+                let currentTab = 'client-rooms';
+                let currentFilter = 'all';
+
+                // Переменные для бронирования
+                let currentBookingRoom = null;
+                let selectedTimeSlots = [];
+                let peopleCount = 1;
+
+                function showTopLevelTab(tabId, navElement) {
+                    document.querySelectorAll('.content-tab').forEach(tab => tab.classList.remove('active'));
+                    document.getElementById(tabId).classList.add('active');
+                    if (navElement) {
+                        document.querySelectorAll('.doc-nav ul a').forEach(link => link.classList.remove('active'));
+                        navElement.classList.add('active');
+                    }
+                }
+
+                function setDemoMode(mode) {
+                    demoMode = mode;
+                    document.getElementById('btn-client-mode').classList.toggle('active', mode === 'client');
+                    document.getElementById('btn-admin-mode').classList.toggle('active', mode === 'admin');
+                    document.getElementById('client-sidebar').style.display = mode === 'client' ? 'block' : 'none';
+                    document.getElementById('admin-sidebar').style.display = mode === 'admin' ? 'block' : 'none';
+                    document.getElementById('demo-url-text').textContent = mode === 'client' ? 'https://privategym.com/client' : 'https://privategym.com/admin';
+                    currentTab = mode === 'client' ? 'client-rooms' : 'admin-overview';
+                    updateSidebarActiveState();
+                    renderDemoContent();
+                }
+
+                function switchDemoTab(tab) {
+                    currentTab = tab;
+                    updateSidebarActiveState();
+                    renderDemoContent();
+                }
+
+                function updateSidebarActiveState() {
+                    const sidebarId = demoMode === 'client' ? 'client-sidebar' : 'admin-sidebar';
+                    document.querySelectorAll(`#${sidebarId} .demo-sidebar-item`).forEach((item, index) => {
+                        item.classList.remove('active');
+                        const tabs = demoMode === 'client' ? ['client-rooms', 'client-bookings', 'client-profile'] : ['admin-overview', 'admin-rooms', 'admin-bookings'];
+                        if (tabs[index] === currentTab) item.classList.add('active');
+                    });
+                }
+
+                function renderDemoContent() {
+                    const mainContent = document.getElementById('demo-main-content');
+                    switch(currentTab) {
+                        case 'client-rooms': mainContent.innerHTML = renderClientRooms(); break;
+                        case 'client-bookings': mainContent.innerHTML = renderClientBookings(); break;
+                        case 'client-profile': mainContent.innerHTML = renderClientProfile(); setTimeout(drawProfileChart, 100); break;
+                        case 'admin-overview': mainContent.innerHTML = renderAdminOverview(); setTimeout(drawAdminChart, 100); break;
+                        case 'admin-rooms': mainContent.innerHTML = renderAdminRooms(); break;
+                        case 'admin-bookings': mainContent.innerHTML = renderAdminBookings(); break;
+                    }
+                }
+
+                // защита данных
+                function resetDemoData() {
+                    if(confirm('🔄 Восстановить все исходные данные демо?')) {
+                        demoData = JSON.parse(JSON.stringify(originalData));
+                        renderDemoContent();
+                        showToast('✅ Демо-данные восстановлены');
+                    }
+                }
+
+function renderClientRooms() {
+    const filtered = currentFilter === 'all' ? demoData.rooms : demoData.rooms.filter(r => r.category === currentFilter);
+    return `
+        <div class="demo-topbar"><h1>Доступные залы</h1><div class="demo-user-badge"> Клиент</div></div>
+        <div class="demo-filters">
+            <button class="btn ${currentFilter === 'all' ? 'btn-primary' : 'btn-secondary'}" onclick="setFilter('all')">Все</button>
+            <button class="btn ${currentFilter === 'Функциональный' ? 'btn-primary' : 'btn-secondary'}" onclick="setFilter('Функциональный')">Функциональный</button>
+            <button class="btn ${currentFilter === 'Mind & Body' ? 'btn-primary' : 'btn-secondary'}" onclick="setFilter('Mind & Body')">Mind & Body</button>
+            <button class="btn ${currentFilter === 'Силовые' ? 'btn-primary' : 'btn-secondary'}" onclick="setFilter('Силовые')">Силовые</button>
+            <button class="btn ${currentFilter === 'Кардио' ? 'btn-primary' : 'btn-secondary'}" onclick="setFilter('Кардио')">Кардио</button>
+        </div>
+        <div class="rooms-grid">
+            ${filtered.map(r => `
+                <div class="room-card">
+                    <div class="room-card-header"><div class="room-card-title">${r.name}</div><span class="status-badge status-Confirmed">${r.category}</span></div>
+                    <div class="room-card-desc">${r.description}</div>
+                    <div class="room-card-meta"><span>👥 ${r.capacity} чел.</span><span>💰 от ${r.basePrice} ₽/ч</span></div>
+                    <button class="btn btn-primary" style="width:100%" onclick="openBookingModal(${r.id})">Забронировать</button>
+                </div>
+            `).join('')}
+        </div>`;
+}
+
+                function renderClientBookings() {
+                    return `
+                        <div class="demo-topbar"><h1>Мои бронирования</h1><div class="demo-user-badge">👤 Клиент</div></div>
+                        <div style="display:flex; flex-direction:column; gap:12px;">
+                            ${demoData.clientBookings.map(b => `
+                                <div class="booking-row">
+                                    <div class="booking-row-header" onclick="this.parentElement.classList.toggle('expanded')">
+                                        <div class="br-date">${formatDate(b.date)}<span>${b.startTime} – ${b.endTime}</span></div>
+                                        <div class="br-room">🏋️ ${b.roomName}</div>
+                                        <div class="br-price">${b.price} ₽</div>
+                                        <div><span class="status-badge status-${b.status}">${b.status === 'Confirmed' ? 'Подтверждено' : 'Завершено'}</span></div>
+                                        <div class="br-chevron">▼</div>
+                                    </div>
+                                    <div class="booking-details">
+                                        <div class="booking-details-content">
+                                            <div class="detail-item"><span class="detail-label">Действия</span>
+                                                <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); cancelClientBooking(${b.id})">Отменить бронирование</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                }
+
+                function renderClientProfile() {
+                    return `
+                        <div class="demo-topbar"><h1>Мой профиль</h1><div class="demo-user-badge">👤 Клиент</div></div>
+                        <div style="display:flex; align-items:center; gap:24px; margin-bottom:32px; padding-bottom:24px; border-bottom:1px solid var(--border);">
+                            <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg, #667eea, #764ba2); color:white; display:flex; align-items:center; justify-content:center; font-size:2em; font-weight:700;">${demoData.profile.name.charAt(0)}</div>
+                            <div><h2 style="font-size:1.5em; margin-bottom:4px;">${demoData.profile.name}</h2><span class="status-badge status-Confirmed">${demoData.profile.role}</span></div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card"><div class="stat-info"><h3>${demoData.profile.totalBookings}</h3><p>Всего</p></div></div>
+                            <div class="stat-card"><div class="stat-info"><h3>${demoData.profile.activeBookings}</h3><p>Активных</p></div></div>
+                            <div class="stat-card"><div class="stat-info"><h3>${demoData.profile.completedBookings}</h3><p>Посещений</p></div></div>
+                            <div class="stat-card"><div class="stat-info"><h3>${demoData.profile.totalSpent} ₽</h3><p>Потрачено</p></div></div>
+                        </div>
+                        <div style="background:white; border:1px solid var(--border); border-radius:12px; padding:24px;">
+                            <h3 style="margin-bottom:20px;">📊 Активность</h3>
+                            <div id="demo-profile-chart" style="min-height:300px;"></div>
+                        </div>`;
+                }
+
+                // админские функции
+                function renderAdminOverview() {
+                    return `
+                        <div class="demo-topbar"><h1>Обзор системы</h1><div class="demo-user-badge">️ Администратор</div></div>
+                        <div style="background:white; border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:24px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                                <h3 style="font-size:1.2em;">📈 Ключевые метрики</h3>
+                                <select class="form-group" style="width:auto; padding:8px 16px; border:1px solid var(--border); border-radius:8px;" onchange="updateAdminStats(this.value)">
+                                    <option value="month">Этот месяц</option><option value="year">Этот год</option><option value="all">За всё время</option>
+                                </select>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-card"><div class="stat-icon blue">📅</div><div class="stat-info"><h3 id="adm-stat-bookings">${demoData.adminStats.totalBookings}</h3><p>Всего бронирований</p></div></div>
+                                <div class="stat-card"><div class="stat-icon green"></div><div class="stat-info"><h3 id="adm-stat-revenue">${formatMoney(demoData.adminStats.totalRevenue)}</h3><p>Общая выручка</p></div></div>
+                                <div class="stat-card"><div class="stat-icon purple">✅</div><div class="stat-info"><h3>${demoData.adminStats.activeBookings}</h3><p>Активных броней</p></div></div>
+                                <div class="stat-card"><div class="stat-icon orange">🏋️</div><div class="stat-info"><h3>${demoData.adminStats.totalRooms}</h3><p>Активных залов</p></div></div>
+                            </div>
+                        </div>
+                        <div style="background:white; border:1px solid var(--border); border-radius:12px; padding:24px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                                <h3 style="font-size:1.2em;">📊 Динамика по дням</h3>
+                                <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:0.9em; color:var(--text-light);">Месяц:</span><input type="month" value="2026-10" style="padding:6px 12px; border:1px solid var(--border); border-radius:6px;"></div>
+                            </div>
+                            <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin-bottom:24px; padding:16px; background:#f8fafc; border-radius:8px;">
+                                <div style="text-align:center;"><div style="font-size:0.85em; color:var(--text-light); margin-bottom:4px;">✅ Полученная выручка</div><div style="font-size:1.3em; font-weight:700; color:#166534;">120 000 ₽</div></div>
+                                <div style="text-align:center; border-left:1px solid var(--border); border-right:1px solid var(--border);"><div style="font-size:0.85em; color:var(--text-light); margin-bottom:4px;">🔮 Ожидаемая выручка</div><div style="font-size:1.3em; font-weight:700; color:#2563eb;">65 000 ₽</div></div>
+                                <div style="text-align:center;"><div style="font-size:0.85em; color:var(--text-light); margin-bottom:4px;">💰 Итого за месяц</div><div style="font-size:1.3em; font-weight:700; color:var(--text-dark);">185 000 ₽</div></div>
+                            </div>
+                            <div id="demo-admin-chart" style="min-height:350px;"></div>
+                        </div>`;
+                }
+
+                function renderAdminRooms() {
+                    return `
+                        <div class="demo-topbar">
+                            <h1>Управление залами</h1>
+                            <button class="btn btn-primary" onclick="addRoomStub()">➕ Добавить зал</button>
+                        </div>
+                        <div class="rooms-grid">
+                            ${demoData.rooms.map(r => `
+                                <div class="room-card">
+                                    <div class="room-card-header">
+                                        <div class="room-card-title">${r.name}</div>
+                                        <span class="status-badge ${r.active ? 'status-Confirmed' : 'status-Cancelled'}">${r.active ? 'Активен' : 'Неактивен'}</span>
+                                    </div>
+                                    <div class="room-card-desc">${r.description}</div>
+                                    <div class="room-card-meta"><span>👥 ${r.capacity} чел.</span><span>💰 ${r.basePrice} ₽/ч</span></div>
+                                    <div class="room-card-actions">
+                                        <button class="btn btn-warning btn-sm" onclick="openEditRoomModal(${r.id})">⚙️ Изменить</button>
+                                        <button class="btn btn-danger btn-sm" onclick="deleteRoom(${r.id})">️ Удалить</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                }
+
+                function renderAdminBookings() {
+                    return `
+                        <div class="demo-topbar"><h1>Все бронирования</h1><div class="demo-user-badge">🛡️ Администратор</div></div>
+                        <div style="background:white; border:1px solid var(--border); border-radius:12px; padding:24px;">
+                            <div class="filters-bar">
+                                <div class="form-group" style="flex:2;"><label>Поиск</label><input type="text" id="admin-search" placeholder="Имя или зал..." oninput="filterAdminBookings()" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></div>
+                                <div class="form-group" style="flex:1;"><label>Месяц и год</label><input type="month" value="2026-10" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px;"></div>
+                                <div class="form-group" style="flex:0; display:flex; align-items:flex-end;"><button class="btn btn-secondary" style="height:42px;" onclick="resetAdminSearch()">Сброс</button></div>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:12px;" id="admin-bookings-list">
+                                ${demoData.adminBookings.map(b => renderAdminBookingRow(b)).join('')}
+                            </div>
+                        </div>`;
+                }
+
+                function renderAdminBookingRow(b) {
+                    return `
+                        <div class="booking-row" id="adm-booking-${b.id}">
+                            <div class="booking-row-header" onclick="this.parentElement.classList.toggle('expanded')">
+                                <div class="br-date">${formatDate(b.date)}<span>${b.startTime} – ${b.endTime}</span></div>
+                                <div class="br-client">👤 ${b.clientName}</div>
+                                <div class="br-room">️ ${b.roomName}</div>
+                                <div class="br-price">${b.price} ₽</div>
+                                <div class="br-chevron">▼</div>
+                            </div>
+                            <div class="booking-details">
+                                <div class="booking-details-content">
+                                    <div class="detail-item"><span class="detail-label">Статус</span><span class="detail-value"><span class="status-badge status-${b.status}">${getStatusText(b.status)}</span></span></div>
+                                    <div class="detail-item"><span class="detail-label">Количество человек</span><span class="detail-value">${b.people} чел.</span></div>
+                                    <div class="detail-item"><span class="detail-label">Email клиента</span><span class="detail-value">${b.clientEmail}</span></div>
+                                    <div class="detail-item"><span class="detail-label">Гости</span><span class="detail-value">${b.guests}</span></div>
+                                    <div class="booking-actions">
+                                        ${b.status === 'Confirmed' ? `<button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); cancelAdminBooking(${b.id})">⚠️ Отменить</button>` : ''}
+                                        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteAdminBooking(${b.id})">🗑️ Удалить навсегда</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+
+                // вспомогательные функции
+                function setFilter(filter) { currentFilter = filter; renderDemoContent(); }
+                function formatDate(dateStr) { return new Date(dateStr).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }); }
+                function getStatusText(status) { return { 'Confirmed': 'Подтверждено', 'Cancelled': 'Отменено', 'Completed': 'Завершено', 'NoShow': 'Не пришёл' }[status] || status; }
+                function formatMoney(amount) { return amount >= 1000000 ? (amount / 1000000).toFixed(1) + 'M ₽' : (amount / 1000).toFixed(0) + 'K ₽'; }
+
+                function updateAdminStats(period) {
+                    const bEl = document.getElementById('adm-stat-bookings');
+                    const rEl = document.getElementById('adm-stat-revenue');
+                    bEl.style.opacity = '0.5'; rEl.style.opacity = '0.5';
+                    setTimeout(() => {
+                        if (period === 'month') { bEl.textContent = '145'; rEl.textContent = '185K ₽'; }
+                        else if (period === 'year') { bEl.textContent = '1,840'; rEl.textContent = '2.4M ₽'; }
+                        else { bEl.textContent = '5,120'; rEl.textContent = '12.8M ₽'; }
+                        bEl.style.opacity = '1'; rEl.style.opacity = '1';
+                        showToast('📊 Данные обновлены');
+                    }, 400);
+                }
+
+                function filterAdminBookings() {
+                    const search = document.getElementById('admin-search').value.toLowerCase();
+                    const filtered = demoData.adminBookings.filter(b =>
+                        b.clientName.toLowerCase().includes(search) ||
+                        b.roomName.toLowerCase().includes(search)
+                    );
+                    document.getElementById('admin-bookings-list').innerHTML = filtered.map(b => renderAdminBookingRow(b)).join('');
+                }
+
+                function resetAdminSearch() {
+                    document.getElementById('admin-search').value = '';
+                    renderDemoContent();
+                }
+
+                // заглушки
+                function addRoomStub() {
+                    const lastRoom = demoData.rooms[demoData.rooms.length - 1];
+                    const newId = Math.max(...demoData.rooms.map(r => r.id)) + 1;
+                    const newRoom = {
+                        ...lastRoom,
+                        id: newId,
+                        name: `${lastRoom.name} (Копия ${newId})`
+                    };
+                    demoData.rooms.push(newRoom);
+                    renderDemoContent();
+                    showToast(`✅ Добавлен зал "${newRoom.name}"`);
+                }
+
+                function deleteRoom(id) {
+                    if (demoData.rooms.length <= 1) {
+                        showToast('⚠️ Нельзя удалить последний зал!');
+                        return;
+                    }
+                    if(confirm('Удалить этот зал?')) {
+                        demoData.rooms = demoData.rooms.filter(r => r.id !== id);
+                        renderDemoContent();
+                        showToast('🗑️ Зал удален');
+                    }
+                }
+
+                function cancelAdminBooking(id) {
+                    if(confirm('Отменить это бронирование?')) {
+                        const b = demoData.adminBookings.find(x => x.id === id);
+                        if(b) b.status = 'Cancelled';
+                        renderDemoContent();
+                        showToast('✅ Бронирование отменено');
+                    }
+                }
+
+                function deleteAdminBooking(id) {
+                    if (demoData.adminBookings.length <= 1) {
+                        showToast('⚠️ Нельзя удалить последнее бронирование!');
+                        return;
+                    }
+                    if(confirm('ПОЛНОСТЬЮ удалить это бронирование из базы?')) {
+                        demoData.adminBookings = demoData.adminBookings.filter(x => x.id !== id);
+                        renderDemoContent();
+                        showToast('🗑️ Бронирование удалено из базы данных');
+                    }
+                }
+
+                function cancelClientBooking(id) {
+                    if (demoData.clientBookings.length <= 1) {
+                        showToast('⚠️ Нельзя отменить последнее бронирование!');
+                        return;
+                    }
+                    if(confirm('Отменить бронирование?')) {
+                        demoData.clientBookings = demoData.clientBookings.filter(b => b.id !== id);
+                        renderDemoContent();
+                        showToast('✅ Бронирование отменено');
+                    }
+                }
+
+                function openEditRoomModal(id) {
+                    const room = demoData.rooms.find(r => r.id === id);
+                    if(!room) return;
+                    document.getElementById('edit-room-name').value = room.name;
+                    document.getElementById('edit-room-desc').value = room.description;
+                    document.getElementById('edit-room-category').value = room.category;
+                    document.getElementById('edit-room-capacity').value = room.capacity;
+                    document.getElementById('edit-room-base-price').value = room.basePrice;
+                    document.getElementById('edit-room-add-price').value = room.addPrice;
+                    document.getElementById('edit-room-active').value = room.active.toString();
+                    document.getElementById('edit-room-equipment').value = room.equipment;
+                    document.getElementById('edit-room-muscles').value = room.muscles;
+                    document.getElementById('edit-room-modal').dataset.id = id;
+                    document.getElementById('edit-room-modal').classList.add('active');
+                }
+
+                function saveRoomEdit() {
+                    const id = parseInt(document.getElementById('edit-room-modal').dataset.id);
+                    const room = demoData.rooms.find(r => r.id === id);
+                    if(room) {
+                        room.name = document.getElementById('edit-room-name').value;
+                        room.description = document.getElementById('edit-room-desc').value;
+                        room.category = document.getElementById('edit-room-category').value;
+                        room.capacity = parseInt(document.getElementById('edit-room-capacity').value);
+                        room.basePrice = parseInt(document.getElementById('edit-room-base-price').value);
+                        room.addPrice = parseInt(document.getElementById('edit-room-add-price').value);
+                        room.active = document.getElementById('edit-room-active').value === 'true';
+                        room.equipment = document.getElementById('edit-room-equipment').value;
+                        room.muscles = document.getElementById('edit-room-muscles').value;
+                    }
+                    closeModal('edit-room-modal');
+                    renderDemoContent();
+                    showToast('✅ Зал успешно обновлен!');
+                }
+
+                // окно бронирования
+                function openBookingModal(roomId) {
+                    currentBookingRoom = demoData.rooms.find(r => r.id === roomId);
+                    if (!currentBookingRoom) return;
+
+                    selectedTimeSlots = [];
+                    peopleCount = 1;
+
+                    // Заполняем данные зала
+                    document.getElementById('booking-room-name').textContent = currentBookingRoom.name;
+                    document.getElementById('booking-room-capacity').textContent = `до ${currentBookingRoom.capacity} чел.`;
+                    document.getElementById('booking-room-price').textContent = `${currentBookingRoom.basePrice} ₽/ч (база)`;
+
+                    // Устанавливаем дату
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('booking-date-input').value = today;
+                    updateBookingDate();
+
+                    // Генерируем временные слоты
+                    generateTimeSlots();
+
+                    document.getElementById('booking-modal').classList.add('active');
+                }
+
+                function generateTimeSlots() {
+                    const slots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
+                    const container = document.getElementById('time-slots');
+                    container.innerHTML = slots.map(time => `
+                        <button class="time-slot-btn" onclick="selectTimeSlot('${time}', this)" data-time="${time}">${time}</button>
+                    `).join('');
+                    updateBookingSummary();
+                }
+
+                function selectTimeSlot(time, btn) {
+                    if (btn.classList.contains('disabled')) return;
+
+                    if (btn.classList.contains('selected')) {
+                        btn.classList.remove('selected');
+                        selectedTimeSlots = selectedTimeSlots.filter(t => t !== time);
+                    } else {
+                        btn.classList.add('selected');
+                        selectedTimeSlots.push(time);
+                        selectedTimeSlots.sort();
+                    }
+                    updateBookingSummary();
+                }
+
+                function changePeopleCount(delta) {
+                    const newCount = peopleCount + delta;
+                    if (newCount >= 1 && newCount <= currentBookingRoom.capacity) {
+                        peopleCount = newCount;
+                        document.getElementById('people-count').textContent = peopleCount;
+                        updateBookingSummary();
+                    }
+                }
+
+                function updateBookingDate() {
+                    const dateInput = document.getElementById('booking-date-input').value;
+                    if (dateInput) {
+                        const date = new Date(dateInput);
+                        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                        document.getElementById('summary-date').textContent = date.toLocaleDateString('ru-RU', options) + ' г.';
+                    }
+                    updateBookingSummary();
+                }
+
+                function updateBookingSummary() {
+                    const submitBtn = document.getElementById('booking-submit-btn');
+
+                    if (selectedTimeSlots.length === 0) {
+                        document.getElementById('summary-time').textContent = 'Не выбрано';
+                        document.getElementById('summary-duration').textContent = '0 ч.';
+                        document.getElementById('summary-total').textContent = '0 ₽';
+                        submitBtn.classList.remove('active');
+                        submitBtn.textContent = 'Выберите время для бронирования';
+                        return;
+                    }
+
+                    // Сортируем слоты
+                    selectedTimeSlots.sort();
+                    const startTime = selectedTimeSlots[0];
+                    const endTime = selectedTimeSlots[selectedTimeSlots.length - 1];
+
+                    // Вычисляем длительность
+                    const [startH, startM] = startTime.split(':').map(Number);
+                    const [endH, endM] = endTime.split(':').map(Number);
+                    const duration = (endH * 60 + endM - startH * 60 - startM) / 60 + 1; // +1 т.к. включаем последний час
+
+                    // Вычисляем цену
+                    const basePrice = currentBookingRoom.basePrice;
+                    const addPrice = currentBookingRoom.addPrice;
+                    const total = Math.round((basePrice + (addPrice * (peopleCount - 1))) * duration);
+
+                    document.getElementById('summary-time').textContent = `${startTime} – ${endTime}`;
+                    document.getElementById('summary-duration').textContent = `${duration} ч.`;
+                    document.getElementById('summary-total').textContent = `${total.toLocaleString('ru-RU')} ₽`;
+
+                    submitBtn.classList.add('active');
+                    submitBtn.textContent = `Забронировать на ${duration} ч. за ${total.toLocaleString('ru-RU')} ₽`;
+                }
+
+                function confirmBooking() {
+                    if (!document.getElementById('booking-submit-btn').classList.contains('active')) return;
+
+                    closeModal('booking-modal');
+                    showToast('✅ Бронирование успешно создано!');
+
+                    // Добавляем в клиентские брони
+                    const [startH, startM] = selectedTimeSlots[0].split(':').map(Number);
+                    const [endH, endM] = selectedTimeSlots[selectedTimeSlots.length - 1].split(':').map(Number);
+                    const duration = (endH * 60 + endM - startH * 60 - startM) / 60 + 1;
+                    const total = Math.round((currentBookingRoom.basePrice + (currentBookingRoom.addPrice * (peopleCount - 1))) * duration);
+
+                    const newBooking = {
+                        id: Date.now(),
+                        roomName: currentBookingRoom.name,
+                        date: document.getElementById('booking-date-input').value,
+                        startTime: selectedTimeSlots[0],
+                        endTime: selectedTimeSlots[selectedTimeSlots.length - 1],
+                        price: total,
+                        status: 'Confirmed'
+                    };
+
+                    demoData.clientBookings.push(newBooking);
+
+                    // Добавляем в админские брони
+                    demoData.adminBookings.push({
+                        ...newBooking,
+                        clientName: demoData.profile.name,
+                        clientEmail: 'demo@test.ru',
+                        people: peopleCount,
+                        guests: 'Нет'
+                    });
+                }
+
+                function closeModal(modalId) {
+                    document.getElementById(modalId).classList.remove('active');
+                }
+
+                function showToast(message) {
+                    const container = document.getElementById('toast-container');
+                    const toast = document.createElement('div');
+                    toast.className = 'toast';
+                    toast.textContent = message;
+                    container.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; toast.style.transition = 'all 0.3s ease';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 3000);
+                }
+
+                    document.addEventListener('DOMContentLoaded', () => {
+                        showTopLevelTab('about-section', document.querySelector('.doc-nav ul a'));
+                    renderDemoContent();
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+                    });
+                });
+
+                function drawProfileChart() {
+                    const chartEl = document.getElementById('demo-profile-chart');
+                    if (!chartEl) return;
+                    new ApexCharts(chartEl, {
+                        series: [{ name: 'Бронирований', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }],
+                        chart: { type: 'bar', height: 300, fontFamily: 'Inter, sans-serif', toolbar: { show: false } },
+                        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%', colors: { ranges: [{ from: 0, to: 0, color: '#e2e8f0' }, { from: 1, to: 100, color: '#667eea' }] } } },
+                        dataLabels: { enabled: false },
+                        xaxis: { categories: Array.from({length: 31}, (_, i) => i + 1), labels: { style: { colors: '#64748b', fontSize: '10px' } } },
+                        yaxis: { tickAmount: 1, labels: { style: { colors: '#64748b' } } },
+                        grid: { borderColor: '#f1f5f9', strokeDashArray: 4 }
+                    }).render();
+                }
+
+                function drawAdminChart() {
+                    const chartEl = document.getElementById('demo-admin-chart');
+                    if (!chartEl) return;
+                    const data = Array.from({length: 31}, () => Math.floor(Math.random() * 5));
+                    const today = new Date().getDate();
+                    new ApexCharts(chartEl, {
+                        series: [{ name: 'Бронирования', data: data.map((val, i) => ({ x: `${i + 1}`, y: val, fillColor: (i + 1) < today ? '#667eea' : '#cbd5e1' })) }],
+                        chart: { height: 350, type: 'bar', fontFamily: 'Inter, sans-serif', toolbar: { show: false } },
+                        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
+                        dataLabels: { enabled: false },
+                        xaxis: { type: 'category', labels: { style: { colors: '#64748b', fontSize: '10px' }, rotate: -45 } },
+                        yaxis: { title: { text: 'Кол-во бронирований', style: { color: '#64748b' } }, labels: { style: { colors: '#64748b' } } },
+                        tooltip: { custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                            const point = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+                            return `<div style="padding: 10px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: Inter, sans-serif;"><div style="font-weight: 700; margin-bottom: 4px; color: #0f172a;">${point.x} октября</div><div style="color: #64748b; font-size: 13px;">Бронирований: <b style="color: #0f172a;">${point.y}</b></div></div>`;
+                        }}
+                    }).render();
+                }
+    </script>
+</body>
+</html>

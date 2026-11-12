@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:15
+    container_name: privategym-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: PrivateGymDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - privategym-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d PrivateGymDb"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: privategym-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=db;Port=5432;Database=PrivateGymDb;Username=postgres;Password=postgres"
+      JwtSettings__SecretKey: "MySuperSecretKeyForPrivateGymApi2026MustBeLongEnough!"
+      JwtSettings__Issuer: "PrivateGymApi"
+      JwtSettings__Audience: "PrivateGymClient"
+    ports:
+      - "5000:8080"
+
+volumes:
+  privategym-pgdata:

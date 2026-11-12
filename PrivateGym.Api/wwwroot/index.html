@@ -1,0 +1,1063 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Gym - Залы</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #1e293b;
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+            .sidebar-header h2 {
+                color: #ffffff;
+                font-size: 1.25em;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .nav-item:hover {
+                background: #334155;
+                color: #ffffff;
+            }
+
+            .nav-item.active {
+                background: #667eea;
+                color: #ffffff;
+            }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .logout-btn:hover {
+                background: rgba(255,255,255,0.2);
+            }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+            max-width: 1400px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+            .top-bar h1 {
+                font-size: 1.75em;
+                font-weight: 700;
+                color: #0f172a;
+            }
+
+        .user-badge {
+            background: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #475569;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .category-tab:hover {
+                background: #f1f5f9;
+            }
+
+            .category-tab.active {
+                background: #667eea;
+                color: white;
+                border-color: #667eea;
+            }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 0;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+            .room-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+                border-color: #667eea;
+            }
+
+        .room-image-container {
+            width: 100%;
+            height: 160px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .room-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .room-placeholder {
+            font-size: 3.5em;
+            opacity: 0.4;
+        }
+
+        .room-category-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .room-card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            gap: 12px;
+        }
+
+        .room-card-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .room-card-desc {
+            font-size: 0.9em;
+            color: #64748b;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .room-card-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85em;
+            color: #475569;
+            font-weight: 500;
+            padding-top: 12px;
+            border-top: 1px solid #f1f5f9;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background: #5568d3;
+            }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .modal.active {
+                display: flex;
+            }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 850px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            animation: modalSlide 0.3s ease;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 32px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+            .modal-header h2 {
+                margin: 0;
+                font-size: 1.25em;
+                color: #0f172a;
+            }
+
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+            .close-btn:hover {
+                background: #e2e8f0;
+            }
+
+        .booking-main {
+            padding: 32px;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 600;
+                color: #334155;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 10px 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                font-size: 1em;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            }
+
+                .form-group input:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                }
+
+        .people-counter {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .counter-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+            .counter-btn:hover:not(:disabled) {
+                background: #f1f5f9;
+                border-color: #667eea;
+                color: #667eea;
+            }
+
+            .counter-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+        .counter-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #0f172a;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+            gap: 8px;
+        }
+
+        .time-slot {
+            padding: 10px 4px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            background: white;
+            color: #334155;
+            text-align: center;
+        }
+
+            .time-slot.free {
+                background: #f0fdf4;
+                color: #166534;
+                border-color: #bbf7d0;
+            }
+
+                .time-slot.free:hover {
+                    background: #dcfce7;
+                    border-color: #86efac;
+                }
+
+            .time-slot.busy {
+                background: #fee2e2;
+                color: #991b1b;
+                border-color: #fecaca;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+
+            .time-slot.selected {
+                background: #667eea;
+                color: white;
+                border-color: #667eea;
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            }
+
+        .booking-summary {
+            padding: 32px;
+            background: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-room-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.95em;
+            color: #475569;
+        }
+
+        .summary-divider {
+            border: 0;
+            border-top: 1px dashed #cbd5e1;
+            margin: 16px 0;
+        }
+
+        .summary-total {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-bottom: 24px;
+        }
+
+            .summary-total span:first-child {
+                font-size: 0.9em;
+                color: #64748b;
+                margin-bottom: 4px;
+            }
+
+            .summary-total span:last-child {
+                font-size: 1.75em;
+                font-weight: 800;
+                color: #667eea;
+            }
+
+        .btn-submit-booking {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: #667eea;
+            color: white;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: auto;
+        }
+
+            .btn-submit-booking:hover:not(:disabled) {
+                background: #5568d3;
+                transform: translateY(-1px);
+            }
+
+            .btn-submit-booking:disabled {
+                background: #cbd5e1;
+                color: #64748b;
+                cursor: not-allowed;
+                transform: none;
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+            font-size: 1.1em;
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar-header h2 span, .nav-item span, .logout-btn span {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 12px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .modal-content {
+                grid-template-columns: 1fr;
+                max-height: 95vh;
+            }
+
+            .booking-main {
+                border-right: none;
+                border-bottom: 1px solid #e2e8f0;
+                padding: 24px;
+            }
+
+            .booking-summary {
+                padding: 24px;
+            }
+
+            .modal-header {
+                padding: 20px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏋️ <span>PrivateGym</span></h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/index.html" class="nav-item active">🏋️ <span>Залы</span></a>
+                <a href="/bookings.html" class="nav-item">📅 <span>Мои бронирования</span></a>
+                <a href="/profile.html" class="nav-item">👤 <span>Мой профиль</span></a>
+                <a href="/admin.html" class="nav-item" id="admin-link" style="display: none;">⚙️ <span>Админ-панель</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="window.Auth.logout()">🚪 <span>Выйти</span></button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Доступные залы</h1>
+                <div class="user-badge">👤 <span id="user-info">Загрузка...</span></div>
+            </div>
+
+            <div class="card">
+                <div class="category-tabs" id="category-tabs">
+                </div>
+                <div id="rooms-container" class="rooms-grid">
+                    <div class="empty-state">Загрузка залов...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно бронирования -->
+    <div id="booking-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Бронирование зала</h2>
+                <button class="close-btn" onclick="window.closeModal()">&times;</button>
+            </div>
+
+            <div class="booking-main">
+                <div class="form-group">
+                    <label for="booking-date">📅 Выберите дату:</label>
+                    <input type="date" id="booking-date" onchange="window.loadSchedule()">
+                </div>
+
+                <div class="people-counter">
+                    <span style="font-weight: 600; color: #334155;">👥 Количество человек:</span>
+                    <button class="counter-btn" onclick="window.changePeopleCount(-1)" id="btn-decrease-people">−</button>
+                    <span class="counter-value" id="people-count-display">1</span>
+                    <button class="counter-btn" onclick="window.changePeopleCount(1)" id="btn-increase-people">+</button>
+                </div>
+
+                <h3 style="margin-bottom: 12px; font-size: 1em; color: #334155; font-weight: 600;">⏰ Доступное время (выберите непрерывный диапазон):</h3>
+                <div id="time-grid" class="time-grid">
+                    <div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #64748b;">Сначала выберите дату</div>
+                </div>
+            </div>
+
+            <div class="booking-summary">
+                <div class="summary-room-name" id="summary-room-name">Название зала</div>
+                <div class="summary-row">
+                    <span>👥 Макс. вместимость:</span>
+                    <span id="summary-capacity" style="font-weight: 600; color: #0f172a;">-</span>
+                </div>
+                <div class="summary-row">
+                    <span>💰 Базовая цена:</span>
+                    <span id="summary-base-price" style="font-weight: 600; color: #0f172a;">-</span>
+                </div>
+
+                <hr class="summary-divider">
+
+                <div class="summary-row">
+                    <span>📅 Дата:</span>
+                    <span id="summary-date" style="font-weight: 600; color: #0f172a;">Не выбрана</span>
+                </div>
+                <div class="summary-row">
+                    <span>🕒 Время:</span>
+                    <span id="summary-time" style="font-weight: 600; color: #0f172a;">Не выбрано</span>
+                </div>
+                <div class="summary-row">
+                    <span>⏱️ Длительность:</span>
+                    <span id="summary-duration" style="font-weight: 600; color: #0f172a;">0 ч.</span>
+                </div>
+
+                <div class="summary-total">
+                    <span>Итого к оплате:</span>
+                    <span id="summary-total-price">0 ₽</span>
+                </div>
+
+                <button id="submit-booking-btn" class="btn-submit-booking" disabled onclick="window.submitBooking()">
+                    Выберите время для бронирования
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/config.js"></script>
+    <script>
+                
+                if (!window.Auth || !window.Auth.isAuthenticated()) {
+                    window.location.replace('/landing.html');
+                } else {
+                    document.getElementById('user-info').innerText = window.Auth.getFullName() || 'Пользователь';
+                    if (window.Auth.isAdmin()) {
+                        document.getElementById('admin-link').style.display = 'flex';
+                    }
+                    loadRooms();
+                }
+
+                // Глобальные переменные 
+                window.allRooms = [];
+                window.activeCategory = 'all';
+                window.currentRoomId = null;
+                window.currentRoomName = '';
+                window.currentRoomCapacity = 1;
+                window.currentBasePrice = 0;
+                window.currentPricePerAdditional = 0;
+                window.busySlots = [];
+                window.selectedHours = [];
+                window.peopleCount = 1;
+
+                function loadRooms() {
+                    var container = document.getElementById('rooms-container');
+                    container.innerHTML = '<div class="empty-state">Загрузка залов...</div>';
+                    window.apiRequest('/rooms')
+                        .then(function(response) {
+                            if (!response.ok) throw new Error('Не удалось загрузить залы');
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            window.allRooms = data.items || [];
+                            renderCategoryTabs();
+                            displayRooms(window.allRooms);
+                        })
+                        .catch(function(error) {
+                            container.innerHTML = '<div class="empty-state">❌ ' + error.message + '</div>';
+                        });
+                }
+
+                function renderCategoryTabs() {
+                    var tabsContainer = document.getElementById('category-tabs');
+                    var categories = ['all', ...new Set(window.allRooms.map(r => r.category).filter(Boolean))];
+                    var html = categories.map(cat => {
+                        var label = cat === 'all' ? 'Все залы' : cat;
+                        var isActive = window.activeCategory === cat ? 'active' : '';
+                        return `<button class="category-tab ${isActive}" onclick="window.filterByCategory('${cat}')">${label}</button>`;
+                    }).join('');
+                    tabsContainer.innerHTML = html;
+                }
+
+                window.filterByCategory = function(category) {
+                    window.activeCategory = category;
+                    renderCategoryTabs();
+                    var filtered = category === 'all' ? window.allRooms : window.allRooms.filter(r => r.category === category);
+                    displayRooms(filtered);
+                };
+
+                function displayRooms(rooms) {
+                    var container = document.getElementById('rooms-container');
+                    if (rooms.length === 0) {
+                        container.innerHTML = '<div class="empty-state">Залов в этой категории пока нет.</div>';
+                        return;
+                    }
+
+                    var html = rooms.map(function(room) {
+                        var imageHtml = room.imageUrl
+                            ? `<img src="${room.imageUrl}" class="room-image" alt="${room.name}">`
+                            : `<div class="room-placeholder">🏋️</div>`;
+
+                        var categoryBadge = room.category ? `<div class="room-category-badge">${room.category}</div>` : '';
+
+                        return '<div class="room-card">' +
+                            '<div class="room-image-container">' + categoryBadge + imageHtml + '</div>' +
+                            '<div class="room-card-body">' +
+                                '<div class="room-card-title">' + room.name + '</div>' +
+                                '<div class="room-card-desc">' + (room.description || 'Нет описания') + '</div>' +
+                                '<div class="room-card-meta">' +
+                                    '<span>👥 до ' + room.capacity + ' чел.</span>' +
+                                    '<span>💰 от ' + room.basePrice + ' ₽/ч</span>' +
+                                '</div>' +
+                                '<button class="btn btn-primary" onclick="window.openBookingModal(' + room.id + ', \'' + room.name.replace(/'/g, "\\'") + '\', ' + room.capacity + ', ' + room.basePrice + ', ' + room.pricePerAdditionalPerson + ')">Забронировать</button>' +
+                            '</div>' +
+                        '</div>';
+                    }).join('');
+                    container.innerHTML = html;
+                }
+
+                window.openBookingModal = function(roomId, roomName, capacity, basePrice, pricePerAdditional) {
+                    window.currentRoomId = roomId;
+                    window.currentRoomName = roomName;
+                    window.currentRoomCapacity = capacity;
+                    window.currentBasePrice = basePrice;
+                    window.currentPricePerAdditional = pricePerAdditional;
+                    window.selectedHours = [];
+                    window.peopleCount = 1;
+
+                    document.getElementById('modal-title').innerText = 'Бронирование';
+                    document.getElementById('summary-room-name').innerText = roomName;
+                    document.getElementById('summary-capacity').innerText = 'до ' + capacity + ' чел.';
+                    document.getElementById('summary-base-price').innerText = basePrice + ' ₽/ч (база)';
+
+                    var today = new Date().toISOString().split('T')[0];
+                    document.getElementById('booking-date').value = today;
+
+                    updatePeopleCounterUI();
+                    updateSummaryUI();
+
+                    document.getElementById('booking-modal').classList.add('active');
+                    window.loadSchedule();
+                };
+
+                window.closeModal = function() {
+                    document.getElementById('booking-modal').classList.remove('active');
+                };
+
+                window.changePeopleCount = function(delta) {
+                    var newCount = window.peopleCount + delta;
+                    if (newCount >= 1 && newCount <= window.currentRoomCapacity) {
+                        window.peopleCount = newCount;
+                        updatePeopleCounterUI();
+                        updateSummaryUI();
+                    }
+                };
+
+                function updatePeopleCounterUI() {
+                    document.getElementById('people-count-display').innerText = window.peopleCount;
+                    document.getElementById('btn-decrease-people').disabled = window.peopleCount <= 1;
+                    document.getElementById('btn-increase-people').disabled = window.peopleCount >= window.currentRoomCapacity;
+                }
+
+                window.loadSchedule = function() {
+                    var date = document.getElementById('booking-date').value;
+                    if (!date || !window.currentRoomId) return;
+
+                    var grid = document.getElementById('time-grid');
+                    grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #64748b;">Загрузка расписания...</div>';
+
+                    window.selectedHours = [];
+                    updateSummaryUI();
+
+                    window.apiRequest('/rooms/' + window.currentRoomId + '/schedule?date=' + date)
+                        .then(function(response) {
+                            if (!response.ok) throw new Error('Не удалось загрузить расписание');
+                            return response.json();
+                        })
+                        .then(function(slots) {
+                            window.busySlots = slots || [];
+                            window.renderTimeGrid();
+                        })
+                        .catch(function(error) {
+                            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #dc2626; padding: 20px;">❌ ' + error.message + '</div>';
+                        });
+                };
+
+                window.renderTimeGrid = function() {
+                    var grid = document.getElementById('time-grid');
+                    grid.innerHTML = '';
+                    for (var hour = 8; hour <= 21; hour++) {
+                        var startTime = hour.toString().padStart(2, '0') + ':00';
+                        var isBusy = window.checkIfBusy(hour);
+                        var btn = document.createElement('button');
+                        btn.className = 'time-slot ' + (isBusy ? 'busy' : 'free');
+                        btn.innerText = startTime;
+                        btn.disabled = isBusy;
+                        btn.dataset.hour = hour;
+
+                        if (!isBusy) {
+                            btn.onclick = (function(h) {
+                                return function() { window.toggleTimeSlot(h); };
+                            })(hour);
+                        }
+                        grid.appendChild(btn);
+                    }
+                    applySelectedState();
+                };
+
+                window.checkIfBusy = function(hour) {
+                    var dateStr = document.getElementById('booking-date').value;
+                    var slotStart = new Date(dateStr + 'T' + hour.toString().padStart(2, '0') + ':00:00Z');
+                    var slotEnd = new Date(dateStr + 'T' + (hour + 1).toString().padStart(2, '0') + ':00:00Z');
+                    return window.busySlots.some(function(slot) {
+                        var busyStart = new Date(slot.startTime);
+                        var busyEnd = new Date(slot.endTime);
+                        return slotStart < busyEnd && slotEnd > busyStart;
+                    });
+                };
+
+                window.toggleTimeSlot = function(hour) {
+                    var index = window.selectedHours.indexOf(hour);
+                    var newSelectedHours = [...window.selectedHours];
+
+                    if (index > -1) {
+                        newSelectedHours.splice(index, 1); // Убираем, если уже выбран
+                    } else {
+                        newSelectedHours.push(hour); // Добавляем, если не выбран
+                    }
+
+                    // Просто сортируем по времени, проверка на непрерывность удалена
+                    newSelectedHours.sort((a, b) => a - b);
+                    window.selectedHours = newSelectedHours;
+
+                    applySelectedState();
+                    updateSummaryUI();
+                };
+
+                function applySelectedState() {
+                    var buttons = document.querySelectorAll('.time-slot.free');
+                    buttons.forEach(function(btn) {
+                        var h = parseInt(btn.dataset.hour);
+                        if (window.selectedHours.includes(h)) {
+                            btn.classList.add('selected');
+                        } else {
+                            btn.classList.remove('selected');
+                        }
+                    });
+                }
+
+                function updateSummaryUI() {
+                    var dateInput = document.getElementById('booking-date').value;
+                    var dateEl = document.getElementById('summary-date');
+                    var timeEl = document.getElementById('summary-time');
+                    var durationEl = document.getElementById('summary-duration');
+                    var totalEl = document.getElementById('summary-total-price');
+                    var btn = document.getElementById('submit-booking-btn');
+
+                    if (dateInput) {
+                        var d = new Date(dateInput);
+                        dateEl.innerText = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+                    } else {
+                        dateEl.innerText = 'Не выбрана';
+                    }
+
+                    if (window.selectedHours.length > 0) {
+                        // Формируем читаемый список выбранных слотов
+                        var timeRanges = [];
+                        var startH = window.selectedHours[0];
+                        var prevH = startH;
+
+                        for (var i = 1; i <= window.selectedHours.length; i++) {
+                            if (i === window.selectedHours.length || window.selectedHours[i] !== prevH + 1) {
+                                var endH = prevH + 1;
+                                if (startH === prevH) {
+                                    timeRanges.push(startH.toString().padStart(2, '0') + ':00-' + endH.toString().padStart(2, '0') + ':00');
+                                } else {
+                                    timeRanges.push(startH.toString().padStart(2, '0') + ':00 — ' + endH.toString().padStart(2, '0') + ':00');
+                                }
+                                if (i < window.selectedHours.length) {
+                                    startH = window.selectedHours[i];
+                                    prevH = startH;
+                                }
+                            } else {
+                                prevH = window.selectedHours[i];
+                            }
+                        }
+
+                        timeEl.innerText = timeRanges.join(', ');
+                        var hoursCount = window.selectedHours.length;
+                        durationEl.innerText = hoursCount + ' ч.';
+
+                        var pricePerHour = window.currentBasePrice + window.currentPricePerAdditional * (window.peopleCount - 1);
+                        var totalPrice = pricePerHour * hoursCount;
+
+                        totalEl.innerText = totalPrice.toLocaleString('ru-RU') + ' ₽';
+                        btn.disabled = false;
+                        btn.innerText = 'Забронировать за ' + totalPrice.toLocaleString('ru-RU') + ' ₽';
+                    } else {
+                        timeEl.innerText = 'Не выбрано';
+                        durationEl.innerText = '0 ч.';
+                        totalEl.innerText = '0 ₽';
+                        btn.disabled = true;
+                        btn.innerText = 'Выберите время для бронирования';
+                    }
+                }
+
+window.submitBooking = async function () {
+    if (window.selectedHours.length === 0) return;
+
+    var ranges = [];
+    var currentRange = [window.selectedHours[0]];
+
+    for (var i = 1; i < window.selectedHours.length; i++) {
+        if (window.selectedHours[i] === window.selectedHours[i - 1] + 1) {
+            currentRange.push(window.selectedHours[i]);
+        } else {
+            ranges.push(currentRange);
+            currentRange = [window.selectedHours[i]];
+        }
+    }
+    ranges.push(currentRange);
+
+    var dateStr = document.getElementById('booking-date').value;
+    var parts = dateStr.split('-');
+    var year = parseInt(parts[0]);
+    var month = parseInt(parts[1]) - 1;
+    var day = parseInt(parts[2]);
+
+    var btn = document.getElementById('submit-booking-btn');
+    var originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Обработка...';
+
+    var successCount = 0;
+    var errorMessage = '';
+
+    for (var i = 0; i < ranges.length; i++) {
+        var range = ranges[i];
+        var startHour = range[0];
+        var endHour = range[range.length - 1] + 1;
+
+        var startDate = new Date(year, month, day, startHour, 0, 0);
+        var endDate = new Date(year, month, day, endHour, 0, 0);
+
+        try {
+            var response = await window.apiRequest('/bookings', {
+                method: 'POST',
+                body: {
+                    roomId: window.currentRoomId,
+                    startTime: startDate.toISOString(),
+                    endTime: endDate.toISOString(),
+                    peopleCount: window.peopleCount
+                }
+            });
+
+            if (response.ok) {
+                successCount++;
+            } else {
+                var err = await response.json();
+                errorMessage = err.message || err.title || 'Ошибка бронирования';
+                break;
+            }
+        } catch (error) {
+            errorMessage = error.message;
+            break;
+        }
+    }
+
+    if (successCount > 0 && !errorMessage) {
+        alert('✅ Успешно забронировано! (Создано записей: ' + successCount + ')');
+        window.closeModal();
+    } else if (successCount > 0 && errorMessage) {
+        alert('⚠️ Частичный успех: создано ' + successCount + ' записей, но далее ошибка: ' + errorMessage);
+        btn.disabled = false;
+        btn.innerText = originalText;
+    } else {
+        alert('❌ ' + (errorMessage || 'Ошибка бронирования'));
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+};
+
+                window.onclick = function(event) {
+                    if (event.target === document.getElementById('booking-modal')) {
+                        window.closeModal();
+                    }
+                }
+    </script>
+</body>
+</html>

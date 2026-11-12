@@ -1,0 +1,1944 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель - Private Gym</title>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        #user-search-results, #guest-search-results {
+            max-width: calc(100% - 2px);
+            box-sizing: border-box;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: hidden;
+        }
+
+            .room-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+                border-color: #667eea;
+            }
+
+            .room-card img {
+                width: 100%;
+                height: 160px;
+                object-fit: cover;
+            }
+
+            .room-card:hover img {
+                transform: scale(1.05);
+            }
+
+        .form-group {
+            position: relative;
+        }
+
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #1e293b;
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+            .sidebar-header h2 {
+                color: #ffffff;
+                font-size: 1.25em;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .nav-item:hover {
+                background: #334155;
+                color: #ffffff;
+            }
+
+            .nav-item.active {
+                background: #667eea;
+                color: #ffffff;
+            }
+
+        .sidebar-divider {
+            border-top: 1px solid #334155;
+            margin: 10px 20px;
+        }
+
+        .sidebar-label {
+            color: #64748b;
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0 16px 8px;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .logout-btn:hover {
+                background: rgba(255,255,255,0.2);
+            }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+            max-width: 1400px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+            .top-bar h1 {
+                font-size: 1.75em;
+                font-weight: 700;
+                color: #0f172a;
+            }
+
+        .user-badge {
+            background: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+            .card h2 {
+                font-size: 1.1em;
+                font-weight: 600;
+                color: #0f172a;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+            .stat-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+            }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+        }
+
+            .stat-icon.blue {
+                background: #eff6ff;
+                color: #3b82f6;
+            }
+
+            .stat-icon.green {
+                background: #f0fdf4;
+                color: #22c55e;
+            }
+
+            .stat-icon.purple {
+                background: #faf5ff;
+                color: #a855f7;
+            }
+
+            .stat-icon.orange {
+                background: #fff7ed;
+                color: #f97316;
+            }
+
+        .stat-info h3 {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .stat-info p {
+            font-size: 0.875em;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+            .form-group.full-width {
+                grid-column: 1 / -1;
+            }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 6px;
+                font-weight: 600;
+                color: #334155;
+                font-size: 0.9em;
+            }
+
+            .form-group input, .form-group textarea, .form-group select {
+                width: 100%;
+                padding: 10px 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                font-size: 0.95em;
+                transition: border-color 0.2s, box-shadow 0.2s;
+                background: white;
+            }
+
+                .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+                    outline: none;
+                    border-color: #667eea;
+                    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+                }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+            .btn-primary:hover {
+                background: #5568d3;
+            }
+
+            .btn-primary:disabled {
+                background: #cbd5e1;
+                cursor: not-allowed;
+            }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+        }
+
+            .btn-secondary:hover {
+                background: #e2e8f0;
+            }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+            .btn-danger:hover {
+                background: #fecaca;
+            }
+
+        .btn-warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+            .btn-warning:hover {
+                background: #fde68a;
+            }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .rooms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .room-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 20px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+            .room-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+                border-color: #667eea;
+            }
+
+        .room-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+        }
+
+        .room-card-title {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .room-card-desc {
+            font-size: 0.9em;
+            color: #64748b;
+            line-height: 1.4;
+            flex: 1;
+        }
+
+        .room-card-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 0.85em;
+            color: #475569;
+            font-weight: 500;
+        }
+
+        .room-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+            .room-card-actions .btn {
+                flex: 1;
+            }
+
+        .filters-bar {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: end;
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+            .filters-bar .form-group {
+                margin: 0;
+                flex: 1;
+                min-width: 150px;
+            }
+
+        .booking-row {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.2s;
+            overflow: hidden;
+        }
+
+            .booking-row:hover {
+                border-color: #667eea;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+
+        .booking-row-header {
+            display: grid;
+            grid-template-columns: 1.2fr 1.5fr 1fr 1fr 0.5fr;
+            align-items: center;
+            padding: 10px 16px;
+            cursor: pointer;
+            gap: 10px;
+        }
+
+            .booking-row-header:hover {
+                background: #f8fafc;
+            }
+
+        .br-date {
+            font-weight: 600;
+            color: #0f172a;
+            font-size: 0.9em;
+        }
+
+            .br-date span {
+                display: block;
+                font-size: 0.85em;
+                color: #64748b;
+                font-weight: 400;
+            }
+
+        .br-client {
+            color: #334155;
+            font-size: 0.9em;
+        }
+
+        .br-room {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .br-price {
+            font-weight: 700;
+            color: #0f172a;
+            text-align: right;
+            font-size: 0.9em;
+        }
+
+        .br-chevron {
+            color: #94a3b8;
+            transition: transform 0.2s;
+            text-align: center;
+            font-size: 0.8em;
+        }
+
+        .booking-row.expanded .br-chevron {
+            transform: rotate(180deg);
+        }
+
+        .booking-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #f8fafc;
+            border-top: 1px solid transparent;
+        }
+
+        .booking-row.expanded .booking-details {
+            max-height: 300px;
+            border-top-color: #e2e8f0;
+        }
+
+        .booking-details-content {
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 0.8em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .detail-value {
+            font-size: 0.95em;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .booking-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 8px;
+            padding-top: 16px;
+            border-top: 1px dashed #cbd5e1;
+        }
+
+        .bookings-by-date {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .date-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .date-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            cursor: pointer;
+            background: #f8fafc;
+        }
+
+            .date-card-header:hover {
+                background: #f1f5f9;
+            }
+
+        .date-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .date-box {
+            background: #667eea;
+            color: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+            .date-box .day {
+                font-size: 1.2em;
+            }
+
+            .date-box .month {
+                font-size: 0.7em;
+                text-transform: uppercase;
+            }
+
+        .date-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date-weekday {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .date-count {
+            font-size: 0.85em;
+            color: #64748b;
+        }
+
+        .date-chevron {
+            color: #94a3b8;
+            transition: transform 0.2s;
+        }
+
+        .date-card.expanded .date-chevron {
+            transform: rotate(180deg);
+        }
+
+        .date-card.expanded .date-card-header {
+            background: #eff6ff;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .date-bookings-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: #ffffff;
+        }
+
+        .date-card.expanded .date-bookings-list {
+            max-height: 3000px;
+        }
+
+        .date-bookings-inner {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-Confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-Cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-Completed {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .status-NoShow {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95em;
+        }
+
+            .search-box:focus {
+                outline: none;
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+            .modal.active {
+                display: flex;
+            }
+
+        .modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            animation: modalSlide 0.3s ease;
+        }
+
+        @keyframes modalSlide {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+            .modal-header h2 {
+                margin: 0;
+                font-size: 1.25em;
+            }
+
+        .close-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2em;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+            .close-btn:hover {
+                background: #e2e8f0;
+            }
+
+        .loading-text, .empty-text, .error-text {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+            grid-column: 1 / -1;
+        }
+
+        .error-text {
+            color: #dc2626;
+        }
+
+        .date-range-picker {
+            position: relative;
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .date-input-btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            min-width: 140px;
+            justify-content: space-between;
+        }
+
+            .date-input-btn:hover {
+                border-color: #667eea;
+                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            }
+
+            .date-input-btn.active {
+                border-color: #667eea;
+                background: #eff6ff;
+            }
+
+        .calendar-popup {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 16px;
+            z-index: 1000;
+            min-width: 280px;
+        }
+
+            .calendar-popup.active {
+                display: block;
+            }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+            .calendar-header h4 {
+                margin: 0;
+                font-size: 1em;
+                color: #0f172a;
+            }
+
+        .calendar-nav-btn {
+            background: #f1f5f9;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1em;
+            color: #475569;
+            transition: background 0.2s;
+        }
+
+            .calendar-nav-btn:hover {
+                background: #e2e8f0;
+            }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+            .calendar-weekdays span {
+                text-align: center;
+                font-size: 0.75em;
+                color: #94a3b8;
+                font-weight: 600;
+                padding: 4px 0;
+            }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+            color: #334155;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+            .calendar-day:hover {
+                background: #eff6ff;
+                color: #667eea;
+            }
+
+            .calendar-day.other-month {
+                color: #cbd5e1;
+            }
+
+            .calendar-day.selected {
+                background: #667eea;
+                color: white;
+                font-weight: 600;
+            }
+
+            .calendar-day.in-range {
+                background: #e0e7ff;
+                color: #4338ca;
+            }
+
+            .calendar-day.today {
+                border: 2px solid #667eea;
+            }
+
+        .calendar-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+            .calendar-actions button {
+                padding: 6px 12px;
+                border-radius: 6px;
+                border: none;
+                cursor: pointer;
+                font-size: 0.85em;
+                font-weight: 600;
+            }
+
+            .calendar-actions .btn-apply {
+                background: #667eea;
+                color: white;
+            }
+
+                .calendar-actions .btn-apply:hover {
+                    background: #5568d3;
+                }
+
+            .calendar-actions .btn-clear {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+
+                .calendar-actions .btn-clear:hover {
+                    background: #e2e8f0;
+                }
+
+        @media (max-width: 1024px) {
+            .booking-row-header {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .br-room, .br-price {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar-header h2 span, .nav-item span, .logout-btn span, .sidebar-label {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 12px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><h2>🏋️ <span>PrivateGym</span></h2></div>
+            <nav class="sidebar-nav">
+                <div class="nav-item active" onclick="switchTab('overview', this)">📊 <span>Обзор</span></div>
+                <div class="nav-item" onclick="switchTab('rooms', this)">🏋️ <span>Залы</span></div>
+                <div class="nav-item" onclick="switchTab('bookings', this)">📅 <span>Бронирования</span></div>
+            </nav>
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-label">Пользовательский интерфейс</div>
+            <nav class="sidebar-nav" style="padding-top: 0;">
+                <a href="/index.html" class="nav-item">🌐 <span>Главная (Залы)</span></a>
+                <a href="/bookings.html" class="nav-item">📅 <span>Мои бронирования</span></a>
+                <a href="/profile.html" class="nav-item">👤 <span>Мой профиль</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="window.Auth.logout()">🚪 <span>Выйти</span></button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1 id="page-title">Обзор системы</h1>
+                <div class="user-badge">👤 <span id="user-info">Загрузка...</span></div>
+            </div>
+
+            <!-- Tab: Overview -->
+            <div id="tab-overview" class="tab-content active">
+                <!-- верхние карточки статистики -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h2 style="margin: 0;">📈 Ключевые метрики</h2>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <select id="stats-period" class="search-box" style="width: auto; margin: 0;" onchange="onPeriodChange()">
+                                <option value="month">Этот месяц</option>
+                                <option value="3months">Последние 3 месяца</option>
+                                <option value="year">Этот год</option>
+                                <option value="all">За всё время</option>
+                                <option value="custom">Произвольный период</option>
+                            </select>
+                            <div id="custom-date-picker" style="display: none; position: relative;">
+                                <div class="date-range-picker">
+                                    <button class="date-input-btn" id="btn-start-date" onclick="openCalendar('start')"><span>📅</span><span id="label-start-date">С даты</span></button>
+                                    <span style="color: #94a3b8;">—</span>
+                                    <button class="date-input-btn" id="btn-end-date" onclick="openCalendar('end')"><span>📅</span><span id="label-end-date">По дату</span></button>
+                                </div>
+                                <div id="calendar-popup" class="calendar-popup"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><div class="stat-icon blue">📅</div><div class="stat-info"><h3 id="stat-total-bookings">...</h3><p>Всего бронирований <span id="stat-bookings-change"></span></p></div></div>
+                        <div class="stat-card"><div class="stat-icon green">💰</div><div class="stat-info"><h3 id="stat-total-revenue">...</h3><p>Общая выручка <span id="stat-revenue-change"></span></p></div></div>
+                        <div class="stat-card"><div class="stat-icon purple">✅</div><div class="stat-info"><h3 id="stat-active-bookings">...</h3><p>Активных броней</p></div></div>
+                        <div class="stat-card"><div class="stat-icon orange">🏋️</div><div class="stat-info"><h3 id="stat-total-rooms">...</h3><p>Активных залов</p></div></div>
+                    </div>
+                </div>
+
+                <!-- гистограмма по дням -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h2 style="margin: 0;">📊 Динамика по дням</h2>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <label for="chart-month-picker" style="font-size: 0.9em; color: #64748b; font-weight: 600;">Месяц:</label>
+                            <input type="month" id="chart-month-picker" class="search-box" style="width: auto; margin: 0;" onchange="loadChartStatistics()">
+                        </div>
+                    </div>
+
+                    <!-- статистика по графикам -->
+                    <div id="chart-summary-stats" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.85em; color: #64748b; margin-bottom: 4px;">✅ Полученная выручка</div>
+                            <div id="past-revenue" style="font-size: 1.25em; font-weight: 700; color: #166534;">0 ₽</div>
+                        </div>
+                        <div style="text-align: center; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;">
+                            <div style="font-size: 0.85em; color: #64748b; margin-bottom: 4px;">🔮 Ожидаемая выручка</div>
+                            <div id="future-revenue" style="font-size: 1.25em; font-weight: 700; color: #2563eb;">0 ₽</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.85em; color: #64748b; margin-bottom: 4px;">💰 Итого за месяц</div>
+                            <div id="total-revenue" style="font-size: 1.25em; font-weight: 700; color: #0f172a;">0 ₽</div>
+                        </div>
+                    </div>
+
+                    <div id="stats-chart" style="min-height: 350px;"></div>
+                </div>
+            </div>
+
+            <!-- Tab: Rooms -->
+            <div id="tab-rooms" class="tab-content">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">🏋️ Управление залами</h2>
+                        <button class="btn btn-primary" onclick="toggleAddRoomForm()">➕ Добавить зал</button>
+                    </div>
+                    <div id="add-room-form" style="display: none; border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 20px;">
+                        <div class="form-grid">
+                            <div class="form-group full-width"><label>Название зала *</label><input type="text" id="name" placeholder="Например: Кардио-зона"></div>
+                            <div class="form-group full-width"><label>Описание *</label><textarea id="description" rows="2" placeholder="Краткое описание зала"></textarea></div>
+                            <div class="form-group"><label>Вместимость (чел.)</label><input type="number" id="capacity" value="1" min="1"></div>
+                            <div class="form-group"><label>Цена за час (₽)</label><input type="number" id="pricePerHour" value="500" min="0" step="50"></div>
+                            <div class="form-group"><label>Оборудование (через запятую)</label><input type="text" id="equipment" placeholder="Беговая дорожка, Эллипс"></div>
+                            <div class="form-group"><label>Группы мышц (через запятую)</label><input type="text" id="muscleGroups" placeholder="Ноги, Кардио"></div>
+                            <div class="form-group full-width"><button class="btn btn-primary" id="add-room-btn" onclick="addRoom()">Сохранить зал</button></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="rooms-grid" id="rooms-grid"><div class="loading-text">Загрузка списка залов...</div></div>
+            </div>
+
+            <!-- Tab: Bookings -->
+            <div id="tab-bookings" class="tab-content">
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">📊 Все бронирования</h2>
+                        <button class="btn btn-primary" style="width: auto;" onclick="openAdminBookingModal()">➕ Создать бронирование</button>
+                    </div>
+                    <div class="filters-bar">
+                        <div class="form-group" style="flex: 2;"><label>Поиск</label><input type="text" id="search-bookings" class="search-box" placeholder="Имя или зал..." oninput="applyBookingFilters()" style="max-width: 100%;"></div>
+                        <div class="form-group" style="flex: 1; min-width: 200px;">
+                            <label>Месяц и год</label>
+                            <input type="month" id="booking-month-picker" class="search-box" style="max-width: 100%;" onchange="applyBookingFilters()">
+                        </div>
+                        <div class="form-group" style="flex: 0; display: flex; align-items: flex-end;">
+                            <button class="btn btn-secondary" onclick="resetBookingFilters()" style="height: 42px;">Сброс</button>
+                        </div>
+                    </div>
+                    <div class="bookings-by-date" id="bookings-by-date-container">
+                        <div class="loading-text">Загрузка бронирований...</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Модальное окно редактирования зала -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h2>✏️ Редактировать зал</h2><button class="close-btn" onclick="closeEditModal()">&times;</button></div>
+            <input type="hidden" id="edit-id">
+            <div class="form-grid">
+                <div class="form-group full-width"><label>Название зала *</label><input type="text" id="edit-name"></div>
+                <div class="form-group full-width"><label>Описание *</label><textarea id="edit-description" rows="2"></textarea></div>
+                <div class="form-group"><label>Категория</label><input type="text" id="edit-category" placeholder="Например: Силовые"></div>
+                <div class="form-group"><label>URL картинки</label><input type="text" id="edit-imageUrl" placeholder="https://..."></div>
+                <div class="form-group"><label>Вместимость (чел.)</label><input type="number" id="edit-capacity" min="1"></div>
+                <div class="form-group"><label>Базовая цена (₽/ч)</label><input type="number" id="edit-basePrice" min="0" step="50"></div>
+                <div class="form-group"><label>Доплата за чел. (₽/ч)</label><input type="number" id="edit-pricePerAdditional" min="0" step="50"></div>
+                <div class="form-group"><label>Активен</label><select id="edit-isActive"><option value="true">Да</option><option value="false">Нет</option></select></div>
+                <div class="form-group"><label>Оборудование (через запятую)</label><input type="text" id="edit-equipment"></div>
+                <div class="form-group"><label>Группы мышц (через запятую)</label><input type="text" id="edit-muscleGroups"></div>
+                <div class="form-group full-width"><button class="btn btn-primary" id="save-edit-btn" onclick="saveEdit()">Сохранить изменения</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания брони админом -->
+    <div id="admin-booking-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header"><h2>➕ Создать бронирование за клиента</h2><button class="close-btn" onclick="closeAdminBookingModal()">&times;</button></div>
+            <div class="form-grid">
+                <div class="form-group full-width" style="position: relative;">
+                    <label>🔍 Основной клиент</label>
+                    <input type="text" id="admin-client-search" placeholder="Иван Иванов..." oninput="searchUsers(this.value)" autocomplete="off">
+                    <div id="user-search-results" style="position: absolute; background: white; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; max-height: 200px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
+                    <input type="hidden" id="admin-selected-user-id"><input type="hidden" id="admin-selected-user-name">
+                </div>
+                <div class="form-group"><label>Зал</label><select id="admin-booking-room" style="width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px;"><option value="">Загрузка залов...</option></select></div>
+                <div class="form-group"><label>Всего человек</label><input type="number" id="admin-booking-people" value="1" min="1" onchange="updateAdminPrice()"></div>
+                <div class="form-group"><label>Дата и время начала</label><input type="datetime-local" id="admin-booking-start"></div>
+                <div class="form-group"><label>Дата и время окончания</label><input type="datetime-local" id="admin-booking-end"></div>
+                <div class="form-group full-width" style="position: relative;">
+                    <label>👥 Зарегистрированные гости</label>
+                    <input type="text" id="admin-guest-search" placeholder="Начните вводить имя..." oninput="searchGuestUsers(this.value)" autocomplete="off">
+                    <div id="guest-search-results" style="position: absolute; background: white; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; max-height: 200px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 4px;"></div>
+                    <div id="added-guests-list" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
+                    <input type="hidden" id="admin-guest-user-ids">
+                </div>
+                <div class="form-group full-width"><label>👤 Незарегистрированные гости</label><input type="text" id="admin-guest-names" placeholder="Например: Олег, Анна"></div>
+                <div class="form-group full-width" style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0;">
+                    <div style="display: flex; justify-content: space-between; font-size: 1.1em; font-weight: 700; color: #166534;"><span>Итого к оплате:</span><span id="admin-booking-total">0 ₽</span></div>
+                </div>
+                <div class="form-group full-width"><button class="btn btn-primary" onclick="submitAdminBooking(event)">Создать бронирование</button></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/config.js"></script>
+    <script>
+
+                        if (!window.Auth || !window.Auth.isAuthenticated() || !window.Auth.isAdmin()) {
+                            alert('Доступ запрещен. Требуются права администратора.');
+                            window.location.replace('/login.html');
+                        } else {
+                            document.getElementById('user-info').innerText = window.Auth.getFullName() || 'Администратор';
+                            const now = new Date();
+                            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                            document.getElementById('booking-month-picker').value = currentMonth;
+                            document.getElementById('chart-month-picker').value = currentMonth;
+
+                            loadStatistics();
+                            loadChartStatistics();
+                            loadRooms();
+                            loadAllBookings();
+                        }
+
+                        function switchTab(tabId, element) {
+                            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                            document.getElementById('tab-' + tabId).classList.add('active');
+                            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                            if(element) element.classList.add('active');
+                            const titles = { 'overview': 'Обзор системы', 'rooms': 'Управление залами', 'bookings': 'Все бронирования' };
+                            document.getElementById('page-title').innerText = titles[tabId];
+                        }
+
+                        function toggleAddRoomForm() {
+                            const form = document.getElementById('add-room-form');
+                            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+                        }
+
+                        let statsChart = null;
+                        let calendarState = { type: null, currentDate: new Date(), startDate: null, endDate: null };
+                        let bookingsCalendarState = { type: null, currentDate: new Date(), startDate: null, endDate: null };
+                        window.adminRoomsData = [];
+
+                        async function loadStatistics() {
+                            const period = document.getElementById('stats-period').value;
+                            let url = `/admin/statistics?period=${period}`;
+                            if (period === 'custom') {
+                                if (!calendarState.startDate || !calendarState.endDate) {
+                                    document.getElementById('stat-total-bookings').innerText = '0';
+                                    document.getElementById('stat-total-revenue').innerText = '0 ₽';
+                                    document.getElementById('stat-active-bookings').innerText = '0';
+                                    document.getElementById('stat-total-rooms').innerText = '0';
+                                    updateChangeIndicator('stat-bookings-change', null);
+                                    updateChangeIndicator('stat-revenue-change', null);
+                                    return;
+                                }
+                                url += `&startDate=${calendarState.startDate.toISOString().split('T')[0]}&endDate=${calendarState.endDate.toISOString().split('T')[0]}`;
+                            }
+                            try {
+                                const response = await window.apiRequest(url);
+                                if (!response.ok) throw new Error('Ошибка загрузки статистики');
+                                const stats = await response.json();
+                                document.getElementById('stat-total-bookings').innerText = stats.totalBookings;
+                                document.getElementById('stat-total-revenue').innerText = stats.totalRevenue.toLocaleString('ru-RU') + ' ₽';
+                                document.getElementById('stat-active-bookings').innerText = stats.activeBookings;
+                                document.getElementById('stat-total-rooms').innerText = stats.totalRooms;
+                                updateChangeIndicator('stat-bookings-change', stats.bookingsChange);
+                                updateChangeIndicator('stat-revenue-change', stats.revenueChange);
+                            } catch (error) { console.error(error); }
+                        }
+
+async function loadChartStatistics() {
+            const monthValue = document.getElementById('chart-month-picker').value;
+            if (!monthValue) return;
+
+            const [year, month] = monthValue.split('-').map(Number);
+            const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+            const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            const url = `/admin/statistics?startDate=${startDate}&endDate=${endDate}`;
+
+            try {
+                const response = await window.apiRequest(url);
+                if (!response.ok) throw new Error('Ошибка загрузки статистики графика');
+                const stats = await response.json();
+
+                const backendDataMap = {};
+                stats.chartData.forEach(d => {
+                    const dayNum = parseInt(d.label.split(' ')[0]);
+                    backendDataMap[dayNum] = d;
+                });
+
+                const fullMonthData = [];
+                const monthNamesShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+                const weekDays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dateObj = new Date(year, month - 1, day);
+                    const weekdayStr = weekDays[dateObj.getDay()];
+                    const label = `${day.toString().padStart(2, '0')} ${monthNamesShort[dateObj.getMonth()]} (${weekdayStr})`;
+
+                    const existingData = backendDataMap[day] || { bookings: 0, totalPeople: 0, revenue: 0 };
+
+                    fullMonthData.push({
+                        x: label,
+                        y: existingData.bookings,
+                        bookings: existingData.bookings,
+                        visitors: existingData.totalPeople,
+                        revenue: existingData.revenue
+                    });
+                }
+                renderChart(fullMonthData);
+            } catch (error) {
+                console.error('Ошибка загрузки графика:', error);
+            }
+}
+
+function renderChart(data) {
+            const chartEl = document.getElementById('stats-chart');
+            if (!data || data.length === 0) {
+                chartEl.innerHTML = '<div class="empty-text" style="padding: 40px;">Нет данных для отображения графика</div>';
+                if (statsChart) { statsChart.destroy(); statsChart = null; }
+
+                document.getElementById('past-revenue').innerText = '0 ₽';
+                document.getElementById('future-revenue').innerText = '0 ₽';
+                document.getElementById('total-revenue').innerText = '0 ₽';
+                return;
+            }
+
+            const now = new Date();
+            const currentMonth = now.getMonth() + 1;
+            const currentDay = now.getDate();
+
+            const monthNamesShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+            const firstLabel = data[0].x;
+            const labelMonthStr = firstLabel.split(' ')[1];
+            const chartMonth = monthNamesShort.indexOf(labelMonthStr) + 1;
+
+            let pastRevenue = 0;
+            let futureRevenue = 0;
+
+            const chartData = data.map(d => {
+                const dayNum = parseInt(d.x.split(' ')[0]);
+                let isPast = false;
+
+                if (chartMonth < currentMonth) {
+                    isPast = true;
+                } else if (chartMonth > currentMonth) {
+                    isPast = false;
+                } else {
+                    isPast = dayNum <= currentDay;
+                }
+
+                if (isPast) {
+                    pastRevenue += d.revenue;
+                } else {
+                    futureRevenue += d.revenue;
+                }
+
+                const barColor = isPast ? '#667eea' : '#cbd5e1';
+
+                return {
+                    x: d.x,
+                    y: d.bookings,
+                    bookings: d.bookings,
+                    visitors: d.visitors,
+                    revenue: d.revenue,
+                    fillColor: barColor
+                };
+            });
+
+            document.getElementById('past-revenue').innerText = pastRevenue.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('future-revenue').innerText = futureRevenue.toLocaleString('ru-RU') + ' ₽';
+            document.getElementById('total-revenue').innerText = (pastRevenue + futureRevenue).toLocaleString('ru-RU') + ' ₽';
+
+            const options = {
+                series: [{ name: 'Бронирования', data: chartData }],
+                chart: {
+                    height: 350,
+                    type: 'bar',
+                    fontFamily: 'Segoe UI, sans-serif',
+                    toolbar: { show: false },
+                    zoom: { enabled: false },
+                    selection: { enabled: false }
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        columnWidth: '60%'
+                    }
+                },
+                dataLabels: { enabled: false },
+                xaxis: {
+                    type: 'category',
+                    labels: { style: { colors: '#64748b', fontSize: '10px' }, rotate: -45 }
+                },
+                yaxis: {
+                    title: { text: 'Кол-во бронирований', style: { color: '#64748b' } },
+                    labels: { style: { colors: '#64748b' }, forceNiceScale: true }
+                },
+                tooltip: {
+                    custom: function ({ series, seriesIndex, dataPointIndex, w }) {
+                        const point = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+                        return `
+                            <div style="padding: 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 180px; font-family: 'Segoe UI', sans-serif;">
+                                <div style="font-weight: 700; margin-bottom: 8px; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px; font-size: 14px;">${point.x}</div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #667eea; font-size: 13px;"><span>📅 Бронирований:</span> <b>${point.bookings}</b></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #a855f7; font-size: 13px;"><span>👥 Посетителей:</span> <b>${point.visitors}</b></div>
+                                <div style="display: flex; justify-content: space-between; color: #22c55e; font-size: 13px;"><span>💰 Выручка:</span> <b>${point.revenue.toLocaleString('ru-RU')} ₽</b></div>
+                            </div>`;
+                    }
+                },
+                legend: { show: false }
+            };
+
+            if (statsChart) {
+                statsChart.updateOptions(options);
+                statsChart.updateSeries([{ data: chartData }]);
+            } else {
+                statsChart = new ApexCharts(chartEl, options);
+                statsChart.render();
+            }
+}
+
+                        function updateChangeIndicator(elementId, change) {
+                            const el = document.getElementById(elementId);
+                            if (change === null || change === undefined) { el.innerHTML = ''; return; }
+                            const isPositive = change >= 0;
+                            el.innerHTML = `<span style="background: ${isPositive ? '#dcfce7' : '#fee2e2'}; color: ${isPositive ? '#166534' : '#991b1b'}; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-size: 0.85em;">${isPositive ? '↑' : '↓'} ${isPositive ? '+' : ''}${change.toFixed(1)}%</span>`;
+                        }
+
+                        function onPeriodChange() {
+                            const period = document.getElementById('stats-period').value;
+                            document.getElementById('custom-date-picker').style.display = period === 'custom' ? 'block' : 'none';
+                            if (period !== 'custom') closeCalendar();
+                            loadStatistics();
+                        }
+
+async function loadRooms() {
+            const grid = document.getElementById('rooms-grid');
+            grid.innerHTML = '<div class="loading-text">Загрузка списка залов...</div>';
+            try {
+                const response = await window.apiRequest('/admin/rooms');
+                if (!response.ok) throw new Error('Не удалось загрузить залы');
+                window.adminRoomsData = await response.json();
+
+                if (window.adminRoomsData.length === 0) {
+                    grid.innerHTML = '<div class="empty-text">Залов пока нет. Нажмите "Добавить зал", чтобы создать первый.</div>';
+                    return;
+                }
+
+                grid.innerHTML = window.adminRoomsData.map(room => `
+                    <div class="room-card">
+                        ${room.imageUrl ? `
+                        <div style="width: 100%; height: 160px; overflow: hidden; border-radius: 12px 12px 0 0; margin: -20px -20px 12px -20px;">
+                            <img src="${room.imageUrl}"
+                                 alt="${room.name}"
+                                 style="width: 100%; height: 100%; object-fit: cover; object-position: center;"
+                                 onerror="this.style.display='none'">
+                        </div>` : ''}
+                        <div class="room-card-header">
+                            <div class="room-card-title">${room.name}</div>
+                            <span class="status-badge ${room.isActive ? 'status-Confirmed' : 'status-Cancelled'}">
+                                ${room.isActive ? 'Активен' : 'Неактивен'}
+                            </span>
+                        </div>
+                        <div class="room-card-desc">${room.description || 'Нет описания'}</div>
+                        <div class="room-card-meta">
+                            <span> ${room.capacity} чел.</span>
+                            <span>💰 ${room.basePrice} ₽/ч</span>
+                        </div>
+                        ${room.category ? `<div style="font-size: 0.8em; color: #667eea; font-weight: 600;"> ${room.category}</div>` : ''}
+                        <div class="room-card-actions">
+                            <button class="btn btn-warning btn-sm" onclick="openEditModalById(${room.id})">⚙️ Изменить</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteRoom(${room.id})">🗑️ Удалить</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                grid.innerHTML = `<div class="error-text">❌ ${error.message}</div>`;
+            }
+}
+
+                        function openEditModalById(id) {
+                            const room = window.adminRoomsData.find(r => r.id === id);
+                            if (!room) return;
+                            document.getElementById('edit-id').value = room.id;
+                            document.getElementById('edit-name').value = room.name;
+                            document.getElementById('edit-description').value = room.description || '';
+                            document.getElementById('edit-capacity').value = room.capacity;
+                            document.getElementById('edit-basePrice').value = room.basePrice;
+                            document.getElementById('edit-pricePerAdditional').value = room.pricePerAdditionalPerson;
+                            document.getElementById('edit-category').value = room.category || '';
+                            document.getElementById('edit-imageUrl').value = room.imageUrl || '';
+                            document.getElementById('edit-equipment').value = (room.equipment || []).join(', ');
+                            document.getElementById('edit-muscleGroups').value = (room.muscleGroups || []).join(', ');
+                            document.getElementById('edit-isActive').value = room.isActive.toString();
+                            document.getElementById('edit-modal').classList.add('active');
+                        }
+
+                        function closeEditModal() { document.getElementById('edit-modal').classList.remove('active'); }
+
+                        async function saveEdit() {
+                            const id = parseInt(document.getElementById('edit-id').value);
+                            const name = document.getElementById('edit-name').value.trim();
+                            const description = document.getElementById('edit-description').value.trim();
+                            const capacity = parseInt(document.getElementById('edit-capacity').value) || 1;
+                            const basePrice = parseFloat(document.getElementById('edit-basePrice').value) || 0;
+                            const pricePerAdditional = parseFloat(document.getElementById('edit-pricePerAdditional').value) || 0;
+                            const category = document.getElementById('edit-category').value.trim();
+                            const imageUrl = document.getElementById('edit-imageUrl').value.trim();
+                            const equipment = document.getElementById('edit-equipment').value ? document.getElementById('edit-equipment').value.split(',').map(s => s.trim()).filter(s => s) : [];
+                            const muscleGroups = document.getElementById('edit-muscleGroups').value ? document.getElementById('edit-muscleGroups').value.split(',').map(s => s.trim()).filter(s => s) : [];
+                            const isActive = document.getElementById('edit-isActive').value === 'true';
+
+                            if (!name || !description) { alert('⚠️ Заполните название и описание'); return; }
+                            const btn = document.getElementById('save-edit-btn');
+                            btn.disabled = true; btn.innerText = 'Сохранение...';
+                            try {
+                                const response = await window.apiRequest('/admin/rooms/' + id, {
+                                    method: 'PUT',
+                                    body: { id, name, description, capacity, pricePerHour: basePrice, basePrice, pricePerAdditionalPerson: pricePerAdditional, category, imageUrl, equipment, muscleGroups, isActive }
+                                });
+                                if (response.ok) { alert('✅ Зал успешно обновлен!'); closeEditModal(); loadRooms(); }
+                                else { const err = await response.json(); alert('❌ ' + (err.title || err.message || 'Ошибка')); }
+                            } catch (error) { alert('❌ ' + error.message); }
+                            finally { btn.disabled = false; btn.innerText = 'Сохранить изменения'; }
+                        }
+
+                        async function addRoom() {
+                            const name = document.getElementById('name').value.trim();
+                            const description = document.getElementById('description').value.trim();
+                            const capacity = parseInt(document.getElementById('capacity').value) || 1;
+                            const pricePerHour = parseFloat(document.getElementById('pricePerHour').value) || 0;
+                            const equipment = document.getElementById('equipment').value ? document.getElementById('equipment').value.split(',').map(s => s.trim()).filter(s => s) : [];
+                            const muscleGroups = document.getElementById('muscleGroups').value ? document.getElementById('muscleGroups').value.split(',').map(s => s.trim()).filter(s => s) : [];
+                            if (!name || !description) { alert('⚠️ Заполните название и описание'); return; }
+                            const btn = document.getElementById('add-room-btn');
+                            btn.disabled = true; btn.innerText = 'Добавление...';
+                            try {
+                                const response = await window.apiRequest('/admin/rooms', { method: 'POST', body: { name, description, capacity, pricePerHour, equipment, muscleGroups, isActive: true } });
+                                if (response.ok) {
+                                    alert('✅ Зал добавлен!');
+                                    document.getElementById('name').value = ''; document.getElementById('description').value = '';
+                                    document.getElementById('equipment').value = ''; document.getElementById('muscleGroups').value = '';
+                                    toggleAddRoomForm(); loadRooms(); loadStatistics();
+                                } else { const err = await response.json(); alert('❌ ' + (err.title || err.message || 'Ошибка')); }
+                            } catch (error) { alert('❌ ' + error.message); }
+                            finally { btn.disabled = false; btn.innerText = 'Сохранить зал'; }
+                        }
+
+                        async function deleteRoom(id) {
+                            if (!confirm('Удалить этот зал? Это действие нельзя отменить.')) return;
+                            try {
+                                const response = await window.apiRequest('/admin/rooms/' + id, { method: 'DELETE' });
+                                if (response.ok) { loadRooms(); loadStatistics(); } else { alert('❌ ' + (await response.json()).message); }
+                            } catch (error) { alert('❌ ' + error.message); }
+                        }
+
+                        async function loadAllBookings() {
+                            try {
+                                const response = await window.apiRequest('/admin/bookings');
+                                if (!response.ok) throw new Error('Не удалось загрузить бронирования');
+                                window.allBookings = await response.json();
+                                applyBookingFilters();
+                            } catch (error) { document.getElementById('bookings-by-date-container').innerHTML = `<div class="error-text">❌ ${error.message}</div>`; }
+                        }
+
+function applyBookingFilters() {
+            const searchText = document.getElementById('search-bookings').value.toLowerCase();
+            const monthValue = document.getElementById('booking-month-picker').value;
+            const container = document.getElementById('bookings-by-date-container');
+
+            if (!window.allBookings || !monthValue) {
+                container.innerHTML = '<div class="loading-text">Загрузка бронирований...</div>';
+                return;
+            }
+
+            const [year, month] = monthValue.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+
+            let filtered = window.allBookings.filter(booking => {
+                const matchesText = booking.userName.toLowerCase().includes(searchText) ||
+                    booking.roomName.toLowerCase().includes(searchText) ||
+                    booking.userEmail.toLowerCase().includes(searchText);
+                const bDate = new Date(booking.startTime);
+                const matchesMonth = bDate.getFullYear() === year && (bDate.getMonth() + 1) === month;
+                return matchesText && matchesMonth;
+            });
+
+            const grouped = {};
+            filtered.forEach(b => {
+                const d = new Date(b.startTime);
+                const localDateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                if (!grouped[localDateStr]) grouped[localDateStr] = [];
+                grouped[localDateStr].push(b);
+            });
+
+            const monthNamesShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+            const weekDays = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+
+            let html = '';
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateObj = new Date(year, month - 1, day);
+                const localDateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+                const dayName = weekDays[dateObj.getDay()];
+                const monthNameShort = monthNamesShort[dateObj.getMonth()];
+                const bookingsForDay = grouped[localDateStr] || [];
+                const count = bookingsForDay.length;
+
+                bookingsForDay.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+                let bookingsHtml = '';
+                if (count > 0) {
+                    bookingsHtml = bookingsForDay.map(booking => {
+                        const startDate = new Date(booking.startTime);
+                        const endDate = new Date(booking.endTime);
+                        const timeStr = startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                        const endTimeStr = endDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                        const statusTexts = { 'Confirmed': 'Подтверждено', 'Cancelled': 'Отменено', 'Completed': 'Завершено', 'NoShow': 'Не пришёл' };
+                        return `
+                            <div class="booking-row" id="booking-row-${booking.id}">
+                                <div class="booking-row-header" onclick="window.toggleBookingRow(${booking.id})">
+                                    <div class="br-date"><span>${timeStr} – ${endTimeStr}</span></div>
+                                    <div class="br-client">👤 ${booking.userName}</div>
+                                    <div class="br-room">🏋️ ${booking.roomName}</div>
+                                    <div class="br-price">${booking.totalPrice} ₽</div>
+                                    <div class="br-chevron">▼</div>
+                                </div>
+                                <div class="booking-details">
+                                    <div class="booking-details-content">
+                                        <div class="detail-item"><span class="detail-label">Статус</span><span class="detail-value"><span class="status-badge status-${booking.status}">${statusTexts[booking.status] || booking.status}</span></span></div>
+                                        <div class="detail-item"><span class="detail-label">Количество человек</span><span class="detail-value">${booking.peopleCount || 1} чел.</span></div>
+                                        <div class="detail-item"><span class="detail-label">Email клиента</span><span class="detail-value">${booking.userEmail}</span></div>
+                                        <div class="detail-item"><span class="detail-label">Гости</span><span class="detail-value">${booking.guestNames || 'Нет'}</span></div>
+                                        <div class="booking-actions">
+                                            ${booking.status === 'Confirmed' ? `<button class="btn btn-warning btn-sm" onclick="event.stopPropagation(); window.cancelAdminBooking(${booking.id})">⚠️ Отменить</button>` : ''}
+                                            <button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); window.deleteAdminBooking(${booking.id})">🗑️ Удалить навсегда</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }).join('');
+                } else {
+                    bookingsHtml = `<div style="text-align: center; padding: 24px; color: #94a3b8; font-size: 0.95em;">Нет бронирований на этот день</div>`;
+                }
+
+                const boxStyle = count === 0 ? 'background: #cbd5e1; color: #64748b;' : '';
+                html += `
+                    <div class="date-card" id="date-card-${year}-${month}-${day}">
+                        <div class="date-card-header" onclick="window.toggleDateCard(this)">
+                            <div class="date-info">
+                                <div class="date-box" style="${boxStyle}">
+                                    <span class="day">${day}</span>
+                                    <span class="month">${monthNameShort}</span>
+                                </div>
+                                <div class="date-details">
+                                    <span class="date-weekday">${dayName}</span>
+                                    <span class="date-count">${count} ${getBookingWord(count)}</span>
+                                </div>
+                            </div>
+                            <div class="date-chevron">▼</div>
+                        </div>
+                        <div class="date-bookings-list">
+                            <div class="date-bookings-inner">${bookingsHtml}</div>
+                        </div>
+                    </div>`;
+            }
+            container.innerHTML = html;
+}
+
+// форматирование даты для админ-панели
+function formatAdminDate(dateString, isEndTime = false) {
+            if (!dateString) return '';
+            var safeDateStr = dateString.replace('Z', '');
+            var date = new Date(safeDateStr);
+            if (isEndTime) {
+                return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+            }
+            return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' ' + date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+                        function getBookingWord(count) {
+                            if (count === 0) return 'бронирований';
+                            if (count === 1) return 'бронирование';
+                            if (count >= 2 && count <= 4) return 'бронирования';
+                            return 'бронирований';
+                        }
+
+                        window.toggleDateCard = function (headerElement) {
+                            const card = headerElement.closest('.date-card');
+                            document.querySelectorAll('.date-card.expanded').forEach(c => { if (c !== card) c.classList.remove('expanded'); });
+                            card.classList.toggle('expanded');
+                        }
+
+                        window.toggleBookingRow = function(id) {
+                            const row = document.getElementById(`booking-row-${id}`);
+                            document.querySelectorAll('.booking-row.expanded').forEach(r => { if (r.id !== `booking-row-${id}`) r.classList.remove('expanded'); });
+                            row.classList.toggle('expanded');
+                        }
+
+                        function resetBookingFilters() {
+                            document.getElementById('search-bookings').value = '';
+                            const now = new Date();
+                            const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                            document.getElementById('booking-month-picker').value = currentMonth;
+                            applyBookingFilters();
+                        }
+
+                        window.cancelAdminBooking = async function (id) {
+                            if (!confirm('Вы уверены, что хотите отменить это бронирование?')) return;
+                            try {
+                                const response = await window.apiRequest(`/admin/bookings/${id}`, { method: 'DELETE' });
+                                if (response.ok) { alert('Бронирование успешно отменено'); loadAllBookings(); loadStatistics(); loadChartStatistics(); }
+                                else { const err = await response.json(); alert((err.message || 'Ошибка отмены')); }
+                            } catch (error) { alert(error.message); }
+                        }
+
+                        window.deleteAdminBooking = async function (id) {
+                            if (!confirm('ВНИМАНИЕ: Вы уверены, что хотите ПОЛНОСТЬЮ УДАЛИТЬ это бронирование из базы данных? Это действие нельзя отменить!')) return;
+                            try {
+                                const response = await window.apiRequest(`/admin/bookings/${id}/delete`, { method: 'DELETE' });
+                                if (response.ok) { alert('Бронирование успешно удалено из базы данных'); loadAllBookings(); loadStatistics(); loadChartStatistics(); }
+                                else { const err = await response.json(); alert( (err.message || 'Ошибка удаления')); }
+                            } catch (error) { alert(error.message); }
+                        }
+
+                        function openCalendar(type) { calendarState.type = type; document.getElementById('calendar-popup').classList.add('active'); renderCalendar(); document.getElementById('btn-start-date').classList.toggle('active', type === 'start'); document.getElementById('btn-end-date').classList.toggle('active', type === 'end'); }
+                        function closeCalendar() { document.getElementById('calendar-popup').classList.remove('active'); document.getElementById('btn-start-date').classList.remove('active'); document.getElementById('btn-end-date').classList.remove('active'); }
+                        function renderCalendar() {
+                            const popup = document.getElementById('calendar-popup');
+                            const year = calendarState.currentDate.getFullYear(), month = calendarState.currentDate.getMonth();
+                            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                            const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+                            const firstDay = new Date(year, month, 1), lastDay = new Date(year, month + 1, 0);
+                            const startDayOfWeek = (firstDay.getDay() + 6) % 7;
+                            const today = new Date(); today.setHours(0, 0, 0, 0);
+                            let html = `<div class="calendar-header"><button class="calendar-nav-btn" onclick="changeMonth(-1); event.stopPropagation();">‹</button><h4>${monthNames[month]} ${year}</h4><button class="calendar-nav-btn" onclick="changeMonth(1); event.stopPropagation();">›</button></div><div class="calendar-weekdays">${weekDays.map(d => `<span>${d}</span>`).join('')}</div><div class="calendar-days">`;
+                            for (let i = 0; i < startDayOfWeek; i++) html += `<div></div>`;
+                            for (let day = 1; day <= lastDay.getDate(); day++) {
+                                const date = new Date(year, month, day); date.setHours(0, 0, 0, 0);
+                                let classes = 'calendar-day';
+                                if (date.getTime() === today.getTime()) classes += ' today';
+                                if (calendarState.startDate && date.getTime() === calendarState.startDate.getTime()) classes += ' selected';
+                                if (calendarState.endDate && date.getTime() === calendarState.endDate.getTime()) classes += ' selected';
+                                if (calendarState.startDate && calendarState.endDate && date > calendarState.startDate && date < calendarState.endDate) classes += ' in-range';
+                                html += `<button class="${classes}" onclick="selectDate(${year}, ${month}, ${day}); event.stopPropagation();">${day}</button>`;
+                            }
+                            html += `</div><div class="calendar-actions"><button class="btn-clear" onclick="clearDates(); event.stopPropagation();">Очистить</button><button class="btn-apply" onclick="applyDates(); event.stopPropagation();">Применить</button></div>`;
+                            popup.innerHTML = html;
+                        }
+                        function changeMonth(delta) { calendarState.currentDate.setMonth(calendarState.currentDate.getMonth() + delta); renderCalendar(); }
+                        function selectDate(year, month, day) {
+                            const date = new Date(year, month, day); date.setHours(0, 0, 0, 0);
+                            if (calendarState.type === 'start') { calendarState.startDate = date; if (calendarState.endDate && date > calendarState.endDate) calendarState.endDate = null; }
+                            else { if (calendarState.startDate && date < calendarState.startDate) { calendarState.startDate = date; calendarState.endDate = null; } else { calendarState.endDate = date; } }
+                            updateDateLabels(); renderCalendar();
+                        }
+                        function updateDateLabels() {
+                            const formatDate = (date) => date ? date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
+                            document.getElementById('label-start-date').innerText = calendarState.startDate ? formatDate(calendarState.startDate) : 'С даты';
+                            document.getElementById('label-end-date').innerText = calendarState.endDate ? formatDate(calendarState.endDate) : 'По дату';
+                        }
+                        function clearDates() { calendarState.startDate = null; calendarState.endDate = null; updateDateLabels(); renderCalendar(); loadStatistics(); }
+                        function applyDates() { closeCalendar(); loadStatistics(); }
+
+                        function openBookingsCalendar(type) { bookingsCalendarState.type = type; document.getElementById('bookings-calendar-popup').classList.add('active'); renderBookingsCalendar(); document.getElementById('bookings-btn-start-date').classList.toggle('active', type === 'start'); document.getElementById('bookings-btn-end-date').classList.toggle('active', type === 'end'); }
+                        function closeBookingsCalendar() { document.getElementById('bookings-calendar-popup').classList.remove('active'); document.getElementById('bookings-btn-start-date').classList.remove('active'); document.getElementById('bookings-btn-end-date').classList.remove('active'); }
+                        function renderBookingsCalendar() {
+                            const popup = document.getElementById('bookings-calendar-popup');
+                            const year = bookingsCalendarState.currentDate.getFullYear(), month = bookingsCalendarState.currentDate.getMonth();
+                            const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                            const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+                            const firstDay = new Date(year, month, 1), lastDay = new Date(year, month + 1, 0);
+                            const startDayOfWeek = (firstDay.getDay() + 6) % 7;
+                            const today = new Date(); today.setHours(0, 0, 0, 0);
+                            let html = `<div class="calendar-header"><button class="calendar-nav-btn" onclick="changeBookingsMonth(-1); event.stopPropagation();">‹</button><h4>${monthNames[month]} ${year}</h4><button class="calendar-nav-btn" onclick="changeBookingsMonth(1); event.stopPropagation();">›</button></div><div class="calendar-weekdays">${weekDays.map(d => `<span>${d}</span>`).join('')}</div><div class="calendar-days">`;
+                            for (let i = 0; i < startDayOfWeek; i++) html += `<div></div>`;
+                            for (let day = 1; day <= lastDay.getDate(); day++) {
+                                const date = new Date(year, month, day); date.setHours(0, 0, 0, 0);
+                                let classes = 'calendar-day';
+                                if (date.getTime() === today.getTime()) classes += ' today';
+                                if (bookingsCalendarState.startDate && date.getTime() === bookingsCalendarState.startDate.getTime()) classes += ' selected';
+                                if (bookingsCalendarState.endDate && date.getTime() === bookingsCalendarState.endDate.getTime()) classes += ' selected';
+                                if (bookingsCalendarState.startDate && bookingsCalendarState.endDate && date > bookingsCalendarState.startDate && date < bookingsCalendarState.endDate) classes += ' in-range';
+                                html += `<button class="${classes}" onclick="selectBookingsDate(${year}, ${month}, ${day}); event.stopPropagation();">${day}</button>`;
+                            }
+                            html += `</div><div class="calendar-actions"><button class="btn-clear" onclick="clearBookingsDates(); event.stopPropagation();">Очистить</button><button class="btn-apply" onclick="applyBookingsDates(); event.stopPropagation();">Применить</button></div>`;
+                            popup.innerHTML = html;
+                        }
+                        function changeBookingsMonth(delta) { bookingsCalendarState.currentDate.setMonth(bookingsCalendarState.currentDate.getMonth() + delta); renderBookingsCalendar(); }
+                        function selectBookingsDate(year, month, day) {
+                            const date = new Date(year, month, day); date.setHours(0, 0, 0, 0);
+                            if (bookingsCalendarState.type === 'start') { bookingsCalendarState.startDate = date; if (bookingsCalendarState.endDate && date > bookingsCalendarState.endDate) bookingsCalendarState.endDate = null; }
+                            else { if (bookingsCalendarState.startDate && date < bookingsCalendarState.startDate) { bookingsCalendarState.startDate = date; bookingsCalendarState.endDate = null; } else { bookingsCalendarState.endDate = date; } }
+                            updateBookingsDateLabels(); renderBookingsCalendar();
+                        }
+                        function updateBookingsDateLabels() {
+                            const formatDate = (date) => date ? date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
+                            document.getElementById('bookings-label-start-date').innerText = bookingsCalendarState.startDate ? formatDate(bookingsCalendarState.startDate) : 'С даты';
+                            document.getElementById('bookings-label-end-date').innerText = bookingsCalendarState.endDate ? formatDate(bookingsCalendarState.endDate) : 'По дату';
+                        }
+                        function clearBookingsDates() { bookingsCalendarState.startDate = null; bookingsCalendarState.endDate = null; updateBookingsDateLabels(); renderBookingsCalendar(); applyBookingFilters(); }
+                        function applyBookingsDates() { closeBookingsCalendar(); applyBookingFilters(); }
+
+                        let adminRoomsList = [], addedGuestIds = [], addedGuestNames = [];
+                        async function openAdminBookingModal() {
+                            try {
+                                document.getElementById('admin-booking-modal').classList.add('active');
+                                ['admin-client-search', 'admin-selected-user-id', 'admin-selected-user-name', 'admin-guest-users', 'admin-guest-names', 'admin-guest-user-ids', 'admin-guest-search'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+                                document.getElementById('user-search-results').style.display = 'none';
+                                addedGuestIds = []; addedGuestNames = []; renderGuestChips();
+                                const response = await window.apiRequest('/admin/rooms');
+                                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                                const rooms = await response.json();
+                                const roomSelect = document.getElementById('admin-booking-room');
+                                roomSelect.innerHTML = '<option value="">Выберите зал...</option>';
+                                if (!rooms || rooms.length === 0) {
+                                    closeAdminBookingModal();
+                                    alert('В базе нет залов! Сначала добавьте зал.');
+                                    return;
+                                }
+                                rooms.forEach(room => {
+                                    const option = document.createElement('option');
+                                    option.value = room.id; option.dataset.price = room.basePrice || room.pricePerHour || 0; option.dataset.add = room.pricePerAdditionalPerson || 0;
+                                    option.textContent = `${room.name} (${option.dataset.price} ₽/ч)`;
+                                    roomSelect.appendChild(option);
+                                });
+                                const now = new Date(), end = new Date(now.getTime() + 60 * 60 * 1000);
+                                document.getElementById('admin-booking-start').value = now.toISOString().slice(0, 16);
+                                document.getElementById('admin-booking-end').value = end.toISOString().slice(0, 16);
+                                updateAdminPrice();
+                            } catch (error) { console.error('Ошибка:', error); alert('Ошибка: ' + error.message); }
+                        }
+                        function closeAdminBookingModal() { document.getElementById('admin-booking-modal').classList.remove('active'); }
+                        async function searchUsers(query) {
+                            const resultsDiv = document.getElementById('user-search-results');
+                            if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
+                            const res = await window.apiRequest(`/admin/users?search=${encodeURIComponent(query)}`);
+                            const users = await res.json();
+                            resultsDiv.innerHTML = users.length === 0 ? '<div style="padding: 10px; color: #64748b;">Ничего не найдено</div>' : users.map(u => `<div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'" onclick="selectUser(${u.id}, '${u.fullName.replace(/'/g, "\\'")}')"><div style="font-weight: 600;">${u.fullName}</div><div style="font-size: 0.85em; color: #64748b;">${u.email}</div></div>`).join('');
+                            resultsDiv.style.display = 'block';
+                        }
+                        function selectUser(id, name) { document.getElementById('admin-selected-user-id').value = id; document.getElementById('admin-selected-user-name').value = name; document.getElementById('admin-client-search').value = name; document.getElementById('user-search-results').style.display = 'none'; updateAdminPrice(); }
+                        function updateAdminPrice() {
+                            const roomSelect = document.getElementById('admin-booking-room');
+                            if (!roomSelect || roomSelect.options.length === 0) { document.getElementById('admin-booking-total').innerText = '0 ₽'; return; }
+                            const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+                            if (!selectedOption) return;
+                            const basePrice = parseFloat(selectedOption.dataset.price) || 0, addPrice = parseFloat(selectedOption.dataset.add) || 0, people = parseInt(document.getElementById('admin-booking-people').value) || 1;
+                            const start = new Date(document.getElementById('admin-booking-start').value), end = new Date(document.getElementById('admin-booking-end').value);
+                            let hours = 1; if (start && end && end > start) hours = (end - start) / (1000 * 60 * 60);
+                            document.getElementById('admin-booking-total').innerText = Math.round((basePrice + (addPrice * (people - 1))) * hours).toLocaleString('ru-RU') + ' ₽';
+                        }
+async function submitAdminBooking(e) {
+            const userId = document.getElementById('admin-selected-user-id').value;
+            if (!userId) { alert('Пожалуйста, выберите основного клиента из списка'); return; }
+
+            const roomId = document.getElementById('admin-booking-room').value;
+            const startTimeInput = document.getElementById('admin-booking-start').value;
+            const endTimeInput = document.getElementById('admin-booking-end').value;
+            const peopleCount = parseInt(document.getElementById('admin-booking-people').value) || 1;
+            const guestUserIds = document.getElementById('admin-guest-user-ids').value || null;
+            const guestNames = document.getElementById('admin-guest-names').value.trim() || null;
+
+            const startTime = new Date(startTimeInput).toISOString();
+            const endTime = new Date(endTimeInput).toISOString();
+
+            const btn = e.target;
+            btn.disabled = true;
+            btn.innerText = 'Создание...';
+
+            try {
+                const response = await window.apiRequest('/admin/bookings', {
+                    method: 'POST',
+                    body: {
+                        userId: parseInt(userId),
+                        roomId: parseInt(roomId),
+                        startTime: startTime,
+                        endTime: endTime,
+                        peopleCount,
+                        guestUserIds: guestUserIds,
+                        guestNames: guestNames
+                    }
+                });
+                if (response.ok) {
+                    alert('Бронирование успешно создано!');
+                    closeAdminBookingModal();
+                    loadAllBookings();
+                    loadStatistics();
+                    loadChartStatistics();
+                } else {
+                    const err = await response.json();
+                    alert((err.message || 'Ошибка'));
+                }
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Создать бронирование';
+            }
+}
+                        async function searchGuestUsers(query) {
+                            const mainClientId = document.getElementById('admin-selected-user-id').value;
+                            const resultsDiv = document.getElementById('guest-search-results');
+                            if (query.length < 2) { resultsDiv.style.display = 'none'; return; }
+                            const res = await window.apiRequest(`/admin/users?search=${encodeURIComponent(query)}`);
+                            let users = await res.json();
+                            users = users.filter(u => u.id.toString() !== mainClientId && !addedGuestIds.includes(u.id.toString()));
+                            resultsDiv.innerHTML = users.length === 0 ? '<div style="padding: 10px; color: #64748b;">Ничего не найдено или пользователь уже добавлен</div>' : users.map(u => `<div style="padding: 10px; cursor: pointer; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'" onclick="addGuestUser(${u.id}, '${u.fullName.replace(/'/g, "\\'")}')"><div style="font-weight: 600;">${u.fullName}</div><div style="font-size: 0.85em; color: #64748b;">${u.email}</div></div>`).join('');
+                            resultsDiv.style.display = 'block';
+                        }
+                        function addGuestUser(id, name) { addedGuestIds.push(id.toString()); addedGuestNames.push(name); document.getElementById('admin-guest-user-ids').value = addedGuestIds.join(','); renderGuestChips(); document.getElementById('admin-guest-search').value = ''; document.getElementById('guest-search-results').style.display = 'none'; }
+                        function removeGuestUser(index) { addedGuestIds.splice(index, 1); addedGuestNames.splice(index, 1); document.getElementById('admin-guest-user-ids').value = addedGuestIds.join(','); renderGuestChips(); }
+                        function renderGuestChips() { document.getElementById('added-guests-list').innerHTML = addedGuestNames.map((name, index) => `<span style="background: #e0e7ff; color: #4338ca; padding: 6px 12px; border-radius: 16px; font-size: 0.9em; display: flex; align-items: center; gap: 8px; font-weight: 500;">${name}<span style="cursor: pointer; font-weight: bold; font-size: 1.1em; line-height: 1;" onclick="removeGuestUser(${index})">&times;</span></span>`).join(''); }
+
+                        document.addEventListener('click', function (event) {
+                            const statsPopup = document.getElementById('calendar-popup');
+                            if (statsPopup && statsPopup.classList.contains('active') && !document.getElementById('custom-date-picker').contains(event.target)) closeCalendar();
+                            const bookingsPopup = document.getElementById('bookings-calendar-popup');
+                            const bookingsPicker = document.querySelector('#bookings-btn-start-date')?.closest('.date-range-picker');
+                            if (bookingsPopup && bookingsPopup.classList.contains('active') && bookingsPicker && !bookingsPicker.contains(event.target)) closeBookingsCalendar();
+                            const guestResults = document.getElementById('guest-search-results');
+                            if (guestResults && guestResults.style.display === 'block' && !document.getElementById('admin-guest-search').contains(event.target) && !guestResults.contains(event.target)) guestResults.style.display = 'none';
+                            if (event.target === document.getElementById('edit-modal')) closeEditModal();
+                            if (event.target === document.getElementById('admin-booking-modal')) closeAdminBookingModal();
+                        });
+    </script>
+</body>
+</html>

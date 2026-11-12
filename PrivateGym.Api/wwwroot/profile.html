@@ -1,0 +1,571 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой профиль - Private Gym</title>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #1e293b;
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+            .sidebar-header h2 {
+                color: #ffffff;
+                font-size: 1.25em;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .nav-item:hover {
+                background: #334155;
+                color: #ffffff;
+            }
+
+            .nav-item.active {
+                background: #667eea;
+                color: #ffffff;
+            }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .logout-btn:hover {
+                background: rgba(255,255,255,0.2);
+            }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+            max-width: 1200px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+            .top-bar h1 {
+                font-size: 1.75em;
+                font-weight: 700;
+                color: #0f172a;
+            }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+            .card h2 {
+                font-size: 1.1em;
+                font-weight: 600;
+                color: #0f172a;
+                margin-bottom: 20px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2em;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .profile-info h2 {
+            margin: 0 0 8px 0;
+            font-size: 1.5em;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+            .stat-card h3 {
+                font-size: 1.75em;
+                font-weight: 700;
+                color: #667eea;
+                margin-bottom: 4px;
+            }
+
+            .stat-card p {
+                font-size: 0.9em;
+                color: #64748b;
+            }
+
+        .chart-container {
+            min-height: 300px;
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #475569;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .bookings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .booking-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .booking-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .booking-room {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .booking-date {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-Confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-Completed {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .status-NoShow {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-Cancelled {
+            background: #f1f5f9;
+            color: #64748b;
+            text-decoration: line-through;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .loading-text {
+            text-align: center;
+            padding: 40px 20px;
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar-header h2 span, .nav-item span, .logout-btn span {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 12px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><h2>🏋️ <span>PrivateGym</span></h2></div>
+            <nav class="sidebar-nav">
+                <a href="/index.html" class="nav-item">🏋️ <span>Залы</span></a>
+                <a href="/bookings.html" class="nav-item">📅 <span>Мои бронирования</span></a>
+                <a href="/profile.html" class="nav-item active">👤 <span>Мой профиль</span></a>
+                <a href="/admin.html" class="nav-item" id="admin-link" style="display: none;">⚙️ <span>Админ-панель</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="window.Auth.logout()">🚪 <span>Выйти</span></button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar"><h1>Мой профиль</h1></div>
+            <div id="profile-content"><div class="loading-text">Загрузка данных профиля...</div></div>
+        </main>
+    </div>
+
+    <script src="/config.js"></script>
+    <script>
+                
+                if (!window.Auth || !window.Auth.isAuthenticated()) {
+                    window.location.replace('/login.html');
+                } else {
+                    if (window.Auth.isAdmin()) {
+                        document.getElementById('admin-link').style.display = 'flex';
+                    }
+                    loadProfile();
+                }
+
+                async function loadProfile() {
+                    const container = document.getElementById('profile-content');
+                    try {
+                        const response = await window.apiRequest('/bookings/my');
+                        if (!response.ok) throw new Error('Не удалось загрузить данные');
+
+                        const data = await response.json();
+                        const fullName = window.Auth.getFullName() || 'Пользователь';
+                        const initials = fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+                        const role = window.Auth.getRole() || 'Client';
+                        const roleText = role === 'Admin' ? 'Администратор' : 'Клиент';
+
+                        const now = new Date();
+                        const currentMonth = now.getMonth() + 1;
+                        const currentYear = now.getFullYear();
+                        const monthStr = `${currentYear}-${String(currentMonth).padStart(2, '0')}`;
+
+                        container.innerHTML = `
+                            <div class="card">
+                                <div class="profile-header">
+                                    <div class="avatar">${initials}</div>
+                                    <div class="profile-info">
+                                        <h2>${fullName}</h2>
+                                        <span class="role-badge">${roleText}</span>
+                                    </div>
+                                </div>
+                                <div class="stats-grid">
+                                    <div class="stat-card"><h3 id="stat-total">0</h3><p>Всего бронирований</p></div>
+                                    <div class="stat-card"><h3 id="stat-active">0</h3><p>Активных</p></div>
+                                    <div class="stat-card"><h3 id="stat-completed">0</h3><p>Посещений</p></div>
+                                    <div class="stat-card"><h3 id="stat-spent">0 ₽</h3><p>Потрачено</p></div>
+                                </div>
+                            </div>
+
+                            <div class="card">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h2 style="margin: 0;">📊 Активность</h2>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <label for="profile-month-picker" style="font-size: 0.9em; color: #64748b; font-weight: 600;">Месяц:</label>
+                                        <input type="month" id="profile-month-picker" class="search-box" style="width: auto; margin: 0; padding: 6px 12px;" value="${monthStr}" onchange="loadProfileChart()">
+                                    </div>
+                                </div>
+                                <h3 id="chart-month-title" class="chart-title"></h3>
+                                <div id="activity-chart" class="chart-container"></div>
+                            </div>
+
+                            <div class="card">
+                                <h2>📅 Последние бронирования</h2>
+                                <div class="bookings-list" id="recent-bookings-list">
+                                    ${renderRecentBookings(data.bookings.slice(0, 5))}
+                                </div>
+                            </div>
+                        `;
+
+                        // Устанавливаем значение пикера и запускаем обновление графика
+                        document.getElementById('profile-month-picker').value = monthStr;
+                        await loadProfileChart();
+
+                    } catch (error) {
+                        console.error("Критическая ошибка загрузки профиля:", error);
+                        container.innerHTML = `<div class="card"><div class="empty-state" style="color: #dc2626;">❌ ${error.message}</div></div>`;
+                    }
+                }
+
+                async function loadProfileChart() {
+                    const monthPicker = document.getElementById('profile-month-picker');
+                    if (!monthPicker) return;
+
+                    const [year, month] = monthPicker.value.split('-').map(Number);
+                    const startDate = new Date(year, month - 1, 1).toISOString().split('T')[0];
+                    const endDate = new Date(year, month, 0).toISOString().split('T')[0];
+
+                    const monthNamesFull = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+                    const titleEl = document.getElementById('chart-month-title');
+                    if (titleEl) {
+                        titleEl.innerText = `${monthNamesFull[month - 1]} ${year}`;
+                    }
+
+                    try {
+                        const response = await window.apiRequest(`/bookings/my?startDate=${startDate}&endDate=${endDate}`);
+                        if (!response.ok) throw new Error('Не удалось загрузить данные графика');
+
+                        const data = await response.json();
+
+                        if (data.totalStats) {
+                            document.getElementById('stat-total').innerText = data.totalStats.totalBookings;
+                            document.getElementById('stat-active').innerText = data.totalStats.activeBookings;
+                            document.getElementById('stat-completed').innerText = data.totalStats.completedBookings;
+                            document.getElementById('stat-spent').innerText = data.totalStats.totalSpent.toLocaleString('ru-RU') + ' ₽';
+                        }
+
+                        const daysInMonth = new Date(year, month, 0).getDate();
+                        const dailyData = new Array(daysInMonth).fill(0);
+
+                        if (data.bookings) {
+                            data.bookings.forEach(booking => {
+                                const date = new Date(booking.startTime);
+                                const day = date.getDate() - 1; 
+                                if (day >= 0 && day < daysInMonth) {
+                                    dailyData[day]++;
+                                }
+                            });
+                        }
+
+                        renderProfileActivityChart(dailyData, year, month);
+                    } catch (error) {
+                        console.error('Ошибка загрузки данных графика:', error);
+                    }
+                }
+
+                function renderProfileActivityChart(dailyData, year, month) {
+                    const chartEl = document.getElementById('activity-chart');
+                    if (!chartEl) return;
+
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+
+                    const formattedData = dailyData.map((count, i) => {
+                        const currentDayDate = new Date(year, month - 1, i + 1);
+                        const isFuture = currentDayDate > today;
+
+                        return {
+                            x: `${i + 1}`,
+                            y: count,
+                            fillColor: isFuture ? '#f59e0b' : '#667eea',
+                            strokeColor: isFuture ? '#f59e0b' : '#667eea'
+                        };
+                    });
+
+                    const options = {
+                        series: [{ name: 'Бронирований', data: formattedData }],
+                        chart: {
+                            type: 'bar',
+                            height: 300,
+                            fontFamily: 'Segoe UI, sans-serif',
+                            toolbar: { show: false }
+                        },
+                        plotOptions: {
+                            bar: {
+                                borderRadius: 4,
+                                columnWidth: '60%'
+                            }
+                        },
+                        dataLabels: { enabled: false },
+                        xaxis: {
+                            labels: { style: { colors: '#64748b', fontSize: '11px' } }
+                        },
+                        yaxis: {
+                            tickAmount: 1,
+                            labels: { style: { colors: '#64748b' } }
+                        },
+                        grid: {
+                            borderColor: '#f1f5f9',
+                            strokeDashArray: 4
+                        },
+                        tooltip: {
+                            custom: function({ series, seriesIndex, dataPointIndex, w }) {
+                                const point = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
+                                const monthNamesShort = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
+                                const dateStr = `${point.x} ${monthNamesShort[month - 1]}`;
+                                const isFuture = point.x > today.getDate() ? ' <span style="color: #f59e0b; font-size: 0.9em;">(Будущее)</span>' : '';
+
+                                return `
+                                    <div style="padding: 10px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">
+                                        <div style="font-weight: 700; margin-bottom: 4px; color: #0f172a;">${dateStr}${isFuture}</div>
+                                        <div style="color: #64748b; font-size: 13px;">Бронирований: <b style="color: #0f172a;">${point.y}</b></div>
+                                    </div>`;
+                            }
+                        }
+                    };
+
+                    if (window.profileChart) {
+                        window.profileChart.updateOptions(options);
+                        window.profileChart.updateSeries([{ data: formattedData }]);
+                    } else {
+                        window.profileChart = new ApexCharts(chartEl, options);
+                        window.profileChart.render();
+                    }
+                }
+
+function renderRecentBookings(bookings) {
+    if (!bookings || bookings.length === 0) {
+        return '<div class="empty-state">У вас пока нет бронирований</div>';
+    }
+
+    const statusTexts = {
+        'Confirmed': 'Подтверждено',
+        'Completed': 'Завершено',
+        'NoShow': 'Не пришёл',
+        'Cancelled': 'Отменено'
+    };
+
+    return bookings.map(b => {
+        const date = new Date(b.startTime);
+        const dateStr = date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+        const timeStr = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+        return `
+            <div class="booking-card">
+                <div class="booking-info">
+                    <div class="booking-room">${b.roomName}</div>
+                    <div class="booking-date"> ${dateStr}, 🕒 ${timeStr}</div>
+                </div>
+                <div style="text-align: right;">
+                    <span class="status-badge status-${b.status}">${statusTexts[b.status] || b.status}</span>
+                    <div style="margin-top: 4px; font-weight: 600; color: #0f172a;">${b.totalPrice} ₽</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+    </script>
+</body>
+</html>

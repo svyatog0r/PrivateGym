@@ -1,0 +1,450 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мои бронирования - Private Gym</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #1e293b;
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #334155;
+        }
+
+            .sidebar-header h2 {
+                color: #ffffff;
+                font-size: 1.25em;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .nav-item:hover {
+                background: #334155;
+                color: #ffffff;
+            }
+
+            .nav-item.active {
+                background: #667eea;
+                color: #ffffff;
+            }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid #334155;
+        }
+
+        .logout-btn {
+            width: 100%;
+            background: rgba(255,255,255,0.1);
+            color: #ffffff;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+            .logout-btn:hover {
+                background: rgba(255,255,255,0.2);
+            }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px;
+            max-width: 1400px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+            .top-bar h1 {
+                font-size: 1.75em;
+                font-weight: 700;
+                color: #0f172a;
+            }
+
+        .user-badge {
+            background: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .booking-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .booking-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            transition: all 0.2s;
+        }
+
+            .booking-card:hover {
+                border-color: #667eea;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            }
+
+        .booking-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .booking-room {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 1.1em;
+        }
+
+        .booking-date {
+            color: #64748b;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .booking-price {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 1.1em;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .status-Confirmed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-Cancelled {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-Completed {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+            .btn-danger:hover {
+                background: #fecaca;
+            }
+
+            .btn-danger:disabled {
+                background: #f1f5f9;
+                color: #94a3b8;
+                cursor: not-allowed;
+            }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+            font-size: 1.1em;
+        }
+
+            .empty-state a {
+                color: #667eea;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+                .empty-state a:hover {
+                    text-decoration: underline;
+                }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .sidebar-header h2 span, .nav-item span, .logout-btn span {
+                display: none;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 12px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+                padding: 20px;
+            }
+
+            .booking-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .booking-price {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header"><h2>🏋️ <span>PrivateGym</span></h2></div>
+            <nav class="sidebar-nav">
+                <a href="/index.html" class="nav-item">🏋️ <span>Залы</span></a>
+                <a href="/bookings.html" class="nav-item active">📅 <span>Мои бронирования</span></a>
+                <a href="/profile.html" class="nav-item">👤 <span>Мой профиль</span></a>
+                <a href="/admin.html" class="nav-item" id="admin-link" style="display: none;">⚙️ <span>Админ-панель</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="window.Auth.logout()">🚪 <span>Выйти</span></button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h1>Мои бронирования</h1>
+                <div class="user-badge">👤 <span id="user-info">Загрузка...</span></div>
+            </div>
+
+            <div class="card">
+                <div id="bookings-container" class="booking-list">
+                    <div class="empty-state">Загрузка бронирований...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/config.js"></script>
+    <script>
+                
+                (function() {
+                    if (!window.Auth || !window.Auth.isAuthenticated()) {
+                        window.location.replace('/login.html');
+                        return;
+                    }
+
+                    var fullName = window.Auth.getFullName();
+                    document.getElementById('user-info').innerText = fullName || 'Пользователь';
+
+                    if (window.Auth.isAdmin()) {
+                        document.getElementById('admin-link').style.display = 'flex';
+                    }
+
+                    loadBookings();
+
+                    function loadBookings() {
+                        var container = document.getElementById('bookings-container');
+                        container.innerHTML = '<div class="empty-state">Загрузка бронирований...</div>';
+
+                        window.apiRequest('/bookings/my')
+                            .then(function (response) {
+                                if (!response.ok) {
+                                    throw new Error('Не удалось загрузить данные (код: ' + response.status + ')');
+                                }
+                                return response.json();
+                            })
+                            .then(function (data) {
+                                var bookings = [];
+                                // Поддерживаем оба формата ответа (с большой и маленькой буквы)
+                                if (data && data.bookings) {
+                                    bookings = data.bookings;
+                                } else if (data && data.Bookings) {
+                                    bookings = data.Bookings;
+                                } else if (Array.isArray(data)) {
+                                    bookings = data;
+                                }
+
+                                displayBookings(bookings);
+                            })
+                            .catch(function (error) {
+                                console.error("=== ОШИБКА ЗАГРУЗКИ ===", error);
+                                container.innerHTML = '<div class="empty-state" style="color: #dc2626;">' +
+                                    '❌ Произошла ошибка при загрузке: ' + error.message + '<br><br>' +
+                                    '<a href="/index.html">🏋️ Перейти к выбору зала</a>' +
+                                    '</div>';
+                            });
+                    }
+
+                    function displayBookings(bookings) {
+                        var container = document.getElementById('bookings-container');
+
+                        var now = new Date();
+                        var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                        var upcomingBookings = bookings.filter(function(booking) {
+                            var bookingDate = new Date(booking.startTime);
+                            var bookingDay = new Date(bookingDate.getFullYear(), bookingDate.getMonth(), bookingDate.getDate());
+                            return bookingDay >= today;
+                        });
+
+                        upcomingBookings.sort(function(a, b) {
+                            return new Date(a.startTime) - new Date(b.startTime);
+                        });
+
+                        if (!upcomingBookings || upcomingBookings.length === 0) {
+                            container.innerHTML = '<div class="empty-state">У вас нет предстоящих бронирований.<br><br><a href="/index.html">Забронировать зал</a></div>';
+                            return;
+                        }
+
+                        var html = upcomingBookings.map(function(booking) {
+                            var isCancelable = booking.status === 'Confirmed';
+                            var statusTexts = { 'Confirmed': 'Подтверждено', 'Cancelled': 'Отменено', 'Completed': 'Завершено', 'Pending': 'Ожидает' };
+
+                            var startDate = new Date(booking.startTime);
+                            var endDate = new Date(booking.endTime);
+
+                            var dateStr = startDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+                            var startTimeStr = startDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                            var endTimeStr = endDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+                            return '<div class="booking-card">' +
+                                '<div class="booking-info">' +
+                                    '<div class="booking-room">' + booking.roomName + '</div>' +
+                                    '<div class="booking-date">📅 ' + dateStr + '</div>' +
+                                    '<div class="booking-date">🕒 С: ' + startTimeStr + ' По: ' + endTimeStr + '</div>' +
+                                    '<div class="booking-date">💰 Стоимость: <strong>' + booking.totalPrice + ' ₽</strong></div>' +
+                                    '<span class="status-badge status-' + booking.status + '">' + (statusTexts[booking.status] || booking.status) + '</span>' +
+                                '</div>' +
+                                '<button class="btn btn-danger" onclick="window.cancelBooking(' + booking.id + ')" ' + (!isCancelable ? 'disabled' : '') + '>' +
+                                    (isCancelable ? 'Отменить' : 'Недоступно') +
+                                '</button>' +
+                            '</div>';
+                        }).join('');
+
+                        container.innerHTML = html;
+                    }
+
+                    window.cancelBooking = function(bookingId) {
+                        if (!confirm('Вы уверены, что хотите отменить это бронирование?')) return;
+
+                        window.apiRequest('/bookings/' + bookingId, { method: 'DELETE' })
+                            .then(function(response) {
+                                if (response.ok) {
+                                    alert('✅ Бронирование отменено');
+                                    loadBookings();
+                                } else {
+                                    return response.json().then(function(err) {
+                                        throw new Error(err.message || 'Ошибка отмены');
+                                    });
+                                }
+                            })
+                            .catch(function(error) {
+                                alert('❌ ' + error.message);
+                            });
+                    };
+                })();
+    </script>
+</body>
+</html>

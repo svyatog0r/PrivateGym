@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход - Private Gym</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 10px;
+            transition: background 0.3s;
+        }
+
+            button:hover {
+                background: #5568d3;
+            }
+
+            button:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+
+        .link {
+            text-align: center;
+            display: block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .error {
+            color: #721c24;
+            background: #f8d7da;
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2> Вход в Private Gym</h2>
+        <div id="error" class="error"></div>
+        <div id="loading" class="loading">Вход...</div>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Пароль">
+        <button id="login-btn" onclick="login()">Войти</button>
+        <a href="/register.html" class="link">Нет аккаунта? Зарегистрироваться</a>
+        <a href="/landing.html" class="link" style="margin-top: 5px; font-size: 0.9em;">← На главную</a>
+    </div>
+
+    <script src="/config.js"></script>
+    <script>
+                Auth.redirectIfAuth();
+
+async function login() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const errorDiv = document.getElementById('error');
+    const loadingDiv = document.getElementById('loading');
+    const loginBtn = document.getElementById('login-btn');
+
+    errorDiv.style.display = 'none';
+
+    if (!email || !password) {
+        errorDiv.innerText = 'Заполните все поля';
+        errorDiv.style.display = 'block';
+        return;
+    }
+
+    loadingDiv.style.display = 'block';
+    loginBtn.disabled = true;
+
+    try {
+        const payload = {
+            email: email,
+            password: password
+        };
+
+        const response = await window.apiRequest('/auth/login', {
+            method: 'POST',
+            body: payload 
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('role', data.role);
+            localStorage.setItem('userId', data.userId);
+            localStorage.setItem('fullName', data.fullName);
+            window.location.replace('/index.html');
+        } else {
+            const errorData = await response.json();
+            let msg = 'Неверный email или пароль';
+            if (errorData.errors) {
+                msg = Object.values(errorData.errors).flat().join(', ');
+            } else if (errorData.message) {
+                msg = errorData.message;
+            }
+            errorDiv.innerText = msg;
+            errorDiv.style.display = 'block';
+        }
+    } catch (error) {
+        errorDiv.innerText = error.message; // Показываем настоящую причину
+        errorDiv.style.display = 'block';
+        console.error("Ошибка fetch:", error);
+    } finally {
+        loadingDiv.style.display = 'none';
+        loginBtn.disabled = false;
+    }
+}
+
+                // Вход по Enter
+                document.getElementById('password').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') login();
+                });
+    </script>
+</body>
+</html>

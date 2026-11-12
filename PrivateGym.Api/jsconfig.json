@@ -1,0 +1,15 @@
+﻿{
+  "compilerOptions": {
+    "noLib": true,
+    "checkJs": false,
+    "noImplicitAny": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "allowJs": true
+  },
+  "include": [],
+  "exclude": [
+    "**/*",
+    "wwwroot/**/*"
+  ]
+}
